@@ -1,0 +1,48 @@
+"""
+Dependency injection configuration.
+
+This module provides dependencies for FastAPI dependency injection system.
+"""
+
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from .database import get_session
+{% for entity in context.entities %}
+from ...domain.{{ context.name|lower }}.repositories.{{ entity.name|lower }}_repository import {{ entity.name }}Repository
+from ...application.use_cases.{{ entity.name|lower }}_use_case import {{ entity.name }}UseCase
+from .repositories.{{ entity.name|lower }}_repository import SqlAlchemy{{ entity.name }}Repository
+{% endfor %}
+
+
+{% for entity in context.entities %}
+async def get_{{ entity.name|lower }}_repository(
+    session: AsyncSession = Depends(get_session)
+) -> {{ entity.name }}Repository:
+    """
+    Get a {{ entity.name }} repository instance.
+
+    Args:
+        session: The database session
+
+    Returns:
+        An instance of {{ entity.name }}Repository
+    """
+    return SqlAlchemy{{ entity.name }}Repository(session)
+
+
+async def get_{{ entity.name|lower }}_use_case(
+    repository: {{ entity.name }}Repository = Depends(get_{{ entity.name|lower }}_repository)
+) -> {{ entity.name }}UseCase:
+    """
+    Get a {{ entity.name }} use case instance.
+
+    Args:
+        repository: The repository to use
+
+    Returns:
+        An instance of {{ entity.name }}UseCase
+    """
+    return {{ entity.name }}UseCase(repository)
+
+{% endfor %}

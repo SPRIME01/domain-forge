@@ -1,0 +1,51 @@
+import React from 'react';
+import { Table, ActionIcon, Group } from '@mantine/core';
+import { observer } from 'mobx-react-lite';
+import { IconEdit, IconTrash, IconEye } from '@tabler/icons-react';
+import { Link } from 'react-router-dom';
+import { {{ entity.name }} } from '../../domain/entities/{{ entity.name|lower }}';
+import { use{{ entity.name }}Store } from '../../infrastructure/store/{{ entity.name|lower }}-store';
+
+interface {{ entity.name }}TableProps {
+  data: {{ entity.name }}[];
+  onDelete?: (id: string) => void;
+}
+
+export const {{ entity.name }}Table: React.FC<{{ entity.name }}TableProps> = observer(({ data, onDelete }) => {
+  return (
+    <Table>
+      <Table.Thead>
+        <Table.Tr>
+          {% for property in entity.properties %}
+          <Table.Th>{{ property.name|pascalcase }}</Table.Th>
+          {% endfor %}
+          <Table.Th>Actions</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {data.map((item) => (
+          <Table.Tr key={item.id}>
+            {% for property in entity.properties %}
+            <Table.Td>{item.{{ property.name }}{% if property.type == 'DateTime' %}?.toLocaleString(){% endif %}}</Table.Td>
+            {% endfor %}
+            <Table.Td>
+              <Group>
+                <ActionIcon variant="subtle" color="blue" component={Link} to={`/{{ entity.name|lower }}/${item.id}`}>
+                  <IconEye size={16} />
+                </ActionIcon>
+                <ActionIcon variant="subtle" color="yellow" component={Link} to={`/{{ entity.name|lower }}/${item.id}/edit`}>
+                  <IconEdit size={16} />
+                </ActionIcon>
+                {onDelete && (
+                  <ActionIcon variant="subtle" color="red" onClick={() => onDelete(item.id)}>
+                    <IconTrash size={16} />
+                  </ActionIcon>
+                )}
+              </Group>
+            </Table.Td>
+          </Table.Tr>
+        ))}
+      </Table.Tbody>
+    </Table>
+  );
+});

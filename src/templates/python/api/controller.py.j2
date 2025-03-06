@@ -1,0 +1,147 @@
+"""
+FastAPI controller for {{ entity.name }} entities.
+
+This module provides HTTP endpoints for managing {{ entity.name }} entities.
+"""
+
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ...application.use_cases.{{ entity.name|lower }}_use_case import {{ entity.name }}UseCase
+from ...application.dtos.{{ entity.name|lower }}_dto import {{ entity.name }}Dto, {{ entity.name }}CreateDto, {{ entity.name }}UpdateDto
+from ...infrastructure.dependencies import get_{{ entity.name|lower }}_use_case
+
+router = APIRouter(
+    prefix="/api/{{ entity.name|lower }}s",
+    tags=["{{ entity.name }}s"]
+)
+
+
+{% for api in entity.apis %}
+{% if api.http_method == 'GET' and api.path.endswith('/{id}') %}
+@router.get("/{id}", response_model={{ entity.name }}Dto)
+async def get_{{ entity.name|lower }}_by_id(
+    id: str,
+    use_case: {{ entity.name }}UseCase = Depends(get_{{ entity.name|lower }}_use_case)
+) -> {{ entity.name }}Dto:
+    """
+    Get a {{ entity.name }} by ID.
+
+    Args:
+        id: The ID of the {{ entity.name|lower }} to retrieve
+        use_case: The use case for {{ entity.name }} operations
+
+    Returns:
+        The {{ entity.name }} entity
+
+    Raises:
+        HTTPException: If the {{ entity.name|lower }} is not found
+    """
+    result = await use_case.get_by_id(id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{{ entity.name }} with ID {id} not found"
+        )
+    return result
+
+{% elif api.http_method == 'GET' %}
+@router.get("/", response_model=List[{{ entity.name }}Dto])
+async def get_{{ entity.name|lower }}s(
+    use_case: {{ entity.name }}UseCase = Depends(get_{{ entity.name|lower }}_use_case)
+) -> List[{{ entity.name }}Dto]:
+    """
+    Get all {{ entity.name }}s.
+
+    Args:
+        use_case: The use case for {{ entity.name }} operations
+
+    Returns:
+        List of {{ entity.name }} entities
+    """
+    return await use_case.get_all()
+
+{% elif api.http_method == 'POST' %}
+@router.post("/", response_model={{ entity.name }}Dto, status_code=status.HTTP_201_CREATED)
+async def create_{{ entity.name|lower }}(
+    data: {{ entity.name }}CreateDto,
+    use_case: {{ entity.name }}UseCase = Depends(get_{{ entity.name|lower }}_use_case)
+) -> {{ entity.name }}Dto:
+    """
+    Create a new {{ entity.name }}.
+
+    Args:
+        data: The data for creating the {{ entity.name|lower }}
+        use_case: The use case for {{ entity.name }} operations
+
+    Returns:
+        The created {{ entity.name }} entity
+    """
+    try:
+        return await use_case.create(data)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+{% elif api.http_method == 'PUT' %}
+@router.put("/{id}", response_model={{ entity.name }}Dto)
+async def update_{{ entity.name|lower }}(
+    id: str,
+    data: {{ entity.name }}UpdateDto,
+    use_case: {{ entity.name }}UseCase = Depends(get_{{ entity.name|lower }}_use_case)
+) -> {{ entity.name }}Dto:
+    """
+    Update a {{ entity.name }}.
+
+    Args:
+        id: The ID of the {{ entity.name|lower }} to update
+        data: The updated {{ entity.name|lower }} data
+        use_case: The use case for {{ entity.name }} operations
+
+    Returns:
+        The updated {{ entity.name }} entity
+
+    Raises:
+        HTTPException: If the {{ entity.name|lower }} is not found
+    """
+    try:
+        result = await use_case.update(id, data)
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"{{ entity.name }} with ID {id} not found"
+            )
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+{% elif api.http_method == 'DELETE' %}
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_{{ entity.name|lower }}(
+    id: str,
+    use_case: {{ entity.name }}UseCase = Depends(get_{{ entity.name|lower }}_use_case)
+) -> None:
+    """
+    Delete a {{ entity.name }}.
+
+    Args:
+        id: The ID of the {{ entity.name|lower }} to delete
+        use_case: The use case for {{ entity.name }} operations
+
+    Raises:
+        HTTPException: If the {{ entity.name|lower }} is not found
+    """
+    result = await use_case.delete(id)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{{ entity.name }} with ID {id} not found"
+        )
+{% endif %}
+{% endfor %}

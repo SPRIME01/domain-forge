@@ -1,0 +1,108 @@
+"""
+Unit tests for {{ entity.name }} entity.
+
+This module contains tests for the {{ entity.name }} entity in the {{ context.name }} bounded context.
+"""
+
+import pytest
+from datetime import datetime
+from uuid import uuid4
+
+from .{{ entity.name|lower }} import {{ entity.name }}
+
+
+@pytest.fixture
+def valid_{{ entity.name|lower }}_data():
+    """Fixture providing valid data for creating a {{ entity.name }}."""
+    return {
+        'id': str(uuid4()),
+        {% for property in entity.properties %}
+        {% if property.name != 'id' %}
+        '{{ property.name }}': {% if property.default_value %}{{ property.default_value }}{% elif property.type == "String" %}'test-{{ property.name }}'{% elif property.type == "Int" %}1{% elif property.type == "Float" or property.type == "Decimal" %}1.0{% elif property.type == "Boolean" %}True{% elif property.type == "DateTime" %}datetime.now(){% elif property.type == "UUID" %}str(uuid4()){% else %}None{% endif %},
+        {% endif %}
+        {% endfor %}
+    }
+
+
+def test_create_{{ entity.name|lower }}_with_valid_data(valid_{{ entity.name|lower }}_data):
+    """Test creating a {{ entity.name }} with valid data."""
+    entity = {{ entity.name }}(**valid_{{ entity.name|lower }}_data)
+    assert entity.validate()
+    {% for property in entity.properties %}
+    assert entity.{{ property.name }} == valid_{{ entity.name|lower }}_data['{{ property.name }}']
+    {% endfor %}
+
+
+{% for property in entity.properties %}
+{% if 'required' in property.constraints %}
+def test_create_{{ entity.name|lower }}_without_{{ property.name }}(valid_{{ entity.name|lower }}_data):
+    """Test that creating a {{ entity.name }} without {{ property.name }} fails validation."""
+    data = valid_{{ entity.name|lower }}_data.copy()
+    data['{{ property.name }}'] = None
+    entity = {{ entity.name }}(**data)
+    assert not entity.validate()
+
+{% endif %}
+{% if 'maxLength' in property.constraints %}
+{% for constraint in property.constraints %}
+{% if 'maxLength:' in constraint %}
+def test_create_{{ entity.name|lower }}_with_{{ property.name }}_too_long(valid_{{ entity.name|lower }}_data):
+    """Test that creating a {{ entity.name }} with too long {{ property.name }} fails validation."""
+    data = valid_{{ entity.name|lower }}_data.copy()
+    data['{{ property.name }}'] = 'a' * ({{ constraint.split(':')[1] }} + 1)
+    entity = {{ entity.name }}(**data)
+    assert not entity.validate()
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if 'min' in property.constraints or 'max' in property.constraints %}
+{% for constraint in property.constraints %}
+{% if 'min:' in constraint %}
+def test_create_{{ entity.name|lower }}_with_{{ property.name }}_too_small(valid_{{ entity.name|lower }}_data):
+    """Test that creating a {{ entity.name }} with too small {{ property.name }} fails validation."""
+    data = valid_{{ entity.name|lower }}_data.copy()
+    data['{{ property.name }}'] = {{ constraint.split(':')[1] }} - 1
+    entity = {{ entity.name }}(**data)
+    assert not entity.validate()
+
+{% endif %}
+{% if 'max:' in constraint %}
+def test_create_{{ entity.name|lower }}_with_{{ property.name }}_too_large(valid_{{ entity.name|lower }}_data):
+    """Test that creating a {{ entity.name }} with too large {{ property.name }} fails validation."""
+    data = valid_{{ entity.name|lower }}_data.copy()
+    data['{{ property.name }}'] = {{ constraint.split(':')[1] }} + 1
+    entity = {{ entity.name }}(**data)
+    assert not entity.validate()
+
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+def test_to_dict_{{ entity.name|lower }}(valid_{{ entity.name|lower }}_data):
+    """Test converting {{ entity.name }} to dictionary."""
+    entity = {{ entity.name }}(**valid_{{ entity.name|lower }}_data)
+    data = entity.to_dict()
+    {% for property in entity.properties %}
+    assert data['{{ property.name }}'] == valid_{{ entity.name|lower }}_data['{{ property.name }}']
+    {% endfor %}
+
+
+def test_from_dict_{{ entity.name|lower }}(valid_{{ entity.name|lower }}_data):
+    """Test creating {{ entity.name }} from dictionary."""
+    entity = {{ entity.name }}.from_dict(valid_{{ entity.name|lower }}_data)
+    {% for property in entity.properties %}
+    assert entity.{{ property.name }} == valid_{{ entity.name|lower }}_data['{{ property.name }}']
+    {% endfor %}
+    assert entity.validate()
+
+
+{% for method in entity.methods %}
+def test_{{ method.name }}_{{ entity.name|lower }}(valid_{{ entity.name|lower }}_data):
+    """Test {{ method.name }} method of {{ entity.name }}."""
+    entity = {{ entity.name }}(**valid_{{ entity.name|lower }}_data)
+    with pytest.raises(NotImplementedError):
+        entity.{{ method.name }}({% for param in method.parameters %}{% if param.default_value %}{{ param.default_value }}{% else %}None{% endif %}{% if not loop.last %}, {% endif %}{% endfor %})
+
+{% endfor %}

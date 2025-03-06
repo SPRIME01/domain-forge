@@ -1,0 +1,113 @@
+"""
+{{ entity.name }} domain entity.
+
+This module defines the {{ entity.name }} entity in the {{ context.name }} bounded context.
+"""
+
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional, Dict, Any
+from uuid import UUID
+
+{% if entity.parent %}
+from .{{ entity.parent|lower }} import {{ entity.parent }}
+{% endif %}
+
+
+@dataclass
+class {{ entity.name }}{% if entity.parent %}({{ entity.parent }}){% endif %}:
+    """
+    {{ entity.name }} entity.
+
+    {% if entity.description %}
+    {{ entity.description }}
+    {% endif %}
+    """
+    {% for property in entity.properties %}
+    {{ property.name }}: {% if "?" in property.type %}Optional[{{ property.type|replace("?", "") }}]{% else %}{{ property.type }}{% endif %}{% if property.default_value %} = {{ property.default_value }}{% elif "?" in property.type %} = None{% endif %}
+    {% endfor %}
+
+    def validate(self) -> bool:
+        """
+        Validate the entity.
+
+        Returns:
+            bool: True if the entity is valid, False otherwise
+        """
+        try:
+            {% for property in entity.properties %}
+            {% if 'required' in property.constraints %}
+            if self.{{ property.name }} is None:
+                return False
+            {% endif %}
+            {% if 'maxLength' in property.constraints %}
+            {% for constraint in property.constraints %}
+            {% if 'maxLength:' in constraint %}
+            if isinstance(self.{{ property.name }}, str) and len(self.{{ property.name }}) > {{ constraint.split(':')[1] }}:
+                return False
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% if 'min' in property.constraints or 'max' in property.constraints %}
+            {% for constraint in property.constraints %}
+            {% if 'min:' in constraint %}
+            if isinstance(self.{{ property.name }}, (int, float)) and self.{{ property.name }} < {{ constraint.split(':')[1] }}:
+                return False
+            {% endif %}
+            {% if 'max:' in constraint %}
+            if isinstance(self.{{ property.name }}, (int, float)) and self.{{ property.name }} > {{ constraint.split(':')[1] }}:
+                return False
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+            {% endfor %}
+            return True
+        except Exception:
+            return False
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the entity to a dictionary.
+
+        Returns:
+            Dict[str, Any]: Dictionary representation of the entity
+        """
+        return {
+            {% for property in entity.properties %}
+            '{{ property.name }}': self.{{ property.name }},
+            {% endfor %}
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> '{{ entity.name }}':
+        """
+        Create an entity from a dictionary.
+
+        Args:
+            data: Dictionary containing entity data
+
+        Returns:
+            {{ entity.name }}: New entity instance
+        """
+        return cls(
+            {% for property in entity.properties %}
+            {{ property.name }}=data.get('{{ property.name }}'{% if not "?" in property.type %}, None{% endif %}),
+            {% endfor %}
+        )
+
+    {% for method in entity.methods %}
+    def {{ method.name }}(self{% for param in method.parameters %}, {{ param.name }}: {{ param.type }}{% if param.default_value %} = {{ param.default_value }}{% endif %}{% endfor %}){% if method.return_type %} -> {{ method.return_type }}{% endif %}:
+        """
+        {{ method.description or "Custom method " + method.name }}.
+
+        {% for param in method.parameters %}
+        Args:
+            {{ param.name }}: {{ param.description or param.name }}
+        {% endfor %}
+        {% if method.return_type %}
+        Returns:
+            {{ method.return_description or "The result" }}
+        {% endif %}
+        """
+        raise NotImplementedError("Method not implemented")
+    {% endfor %}

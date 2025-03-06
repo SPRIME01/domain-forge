@@ -1,0 +1,97 @@
+"""
+{{ entity.name }} repository interface.
+
+This module defines the repository interface for {{ entity.name }} entities.
+"""
+
+from abc import ABC, abstractmethod
+from typing import List, Optional
+
+from .{{ entity.name|lower }} import {{ entity.name }}
+
+
+class {{ entity.name }}Repository(ABC):
+    """Abstract repository interface for {{ entity.name }} entities."""
+
+    @abstractmethod
+    async def get_all(self) -> List[{{ entity.name }}]:
+        """
+        Get all {{ entity.name }} entities.
+
+        Returns:
+            List of {{ entity.name }} entities
+        """
+        pass
+
+    @abstractmethod
+    async def get_by_id(self, id: str) -> Optional[{{ entity.name }}]:
+        """
+        Get a {{ entity.name }} by ID.
+
+        Args:
+            id: Entity ID
+
+        Returns:
+            {{ entity.name }} entity if found, None otherwise
+        """
+        pass
+
+    @abstractmethod
+    async def create(self, entity: {{ entity.name }}) -> {{ entity.name }}:
+        """
+        Create a new {{ entity.name }}.
+
+        Args:
+            entity: {{ entity.name }} entity to create
+
+        Returns:
+            Created {{ entity.name }} entity
+        """
+        pass
+
+    @abstractmethod
+    async def update(self, id: str, entity: {{ entity.name }}) -> Optional[{{ entity.name }}]:
+        """
+        Update an existing {{ entity.name }}.
+
+        Args:
+            id: Entity ID
+            entity: Updated {{ entity.name }} entity
+
+        Returns:
+            Updated {{ entity.name }} entity if found, None otherwise
+        """
+        pass
+
+    @abstractmethod
+    async def delete(self, id: str) -> bool:
+        """
+        Delete a {{ entity.name }}.
+
+        Args:
+            id: Entity ID
+
+        Returns:
+            True if entity was deleted, False if not found
+        """
+        pass
+
+    {% for method in entity.methods %}
+    {% if method.is_query %}
+    @abstractmethod
+    async def {{ method.name }}(self{% for param in method.parameters %}, {{ param.name }}: {{ param.type }}{% if param.default_value %} = {{ param.default_value }}{% endif %}{% endfor %}){% if method.return_type %} -> {{ method.return_type }}{% endif %}:
+        """
+        {{ method.description or "Custom query method " + method.name }}.
+
+        {% for param in method.parameters %}
+        Args:
+            {{ param.name }}: {{ param.description or param.name }}
+        {% endfor %}
+        {% if method.return_type %}
+        Returns:
+            {{ method.return_description or "The query result" }}
+        {% endif %}
+        """
+        pass
+    {% endif %}
+    {% endfor %}

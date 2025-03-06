@@ -1,0 +1,83 @@
+/**
+ * {{ entity.name }} edit page.
+ *
+ * This page provides a form for editing an existing {{ entity.name }} entity.
+ */
+
+import React, { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Title, Stack, Button, Group } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconArrowLeft } from '@tabler/icons-react';
+
+import { {{ entity.name }}Form } from '../components/{{ entity.name|lower }}-form';
+import { use{{ entity.name }}Store } from '../../infrastructure/store/{{ entity.name|lower }}-store';
+import { Update{{ entity.name }}Dto } from '../../application/dtos/{{ entity.name|lower }}-dto';
+
+export const {{ entity.name }}EditPage: React.FC = observer(() => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const store = use{{ entity.name }}Store();
+  const entity = store.selected;
+
+  useEffect(() => {
+    if (id) {
+      store.fetchById(id).catch((error) => {
+        notifications.show({
+          title: 'Error',
+          message: `Failed to load {{ entity.name|lower }}: ${error.message}`,
+          color: 'red',
+        });
+        navigate('/{{ entity.name|lower }}s');
+      });
+    }
+  }, [id]);
+
+  const handleSubmit = async (values: Update{{ entity.name }}Dto) => {
+    if (!id) return;
+
+    try {
+      await store.update(id, values);
+      notifications.show({
+        title: 'Success',
+        message: '{{ entity.name }} updated successfully',
+        color: 'green',
+      });
+      navigate(`/{{ entity.name|lower }}/${id}`);
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: `Failed to update {{ entity.name|lower }}: ${error.message}`,
+        color: 'red',
+      });
+    }
+  };
+
+  if (!entity) {
+    return null;
+  }
+
+  return (
+    <Container size="sm">
+      <Stack>
+        <Group justify="space-between">
+          <Title order={2}>Edit {{ entity.name }}</Title>
+          <Button
+            leftSection={<IconArrowLeft size={16} />}
+            variant="subtle"
+            onClick={() => navigate(`/{{ entity.name|lower }}/${id}`)}
+          >
+            Back to Details
+          </Button>
+        </Group>
+
+        <{{ entity.name }}Form
+          initialValues={entity}
+          onSubmit={handleSubmit}
+          isLoading={store.loading}
+        />
+      </Stack>
+    </Container>
+  );
+});

@@ -1,0 +1,65 @@
+/**
+ * Data Transfer Objects for {{ entity.name }} entities.
+ *
+ * This module defines the DTOs used for transferring {{ entity.name }} data between
+ * the frontend and backend.
+ */
+
+/**
+ * Base DTO interface for {{ entity.name }} data.
+ */
+export interface {{ entity.name }}BaseDto {
+  {% for property in entity.properties %}
+  {% if property.name != 'id' %}
+  /** {{ property.description or property.name }} */
+  {{ property.name }}{% if "?" in property.type %}?{% endif %}: {{ property.type|replace("UUID", "string")|replace("String", "string")|replace("Int", "number")|replace("Decimal", "number")|replace("Float", "number")|replace("Boolean", "boolean")|replace("DateTime", "Date")|replace("Text", "string")|replace("?", "") }}{% if "?" in property.type %} | null{% endif %};
+  {% endif %}
+  {% endfor %}
+}
+
+/**
+ * DTO interface for creating {{ entity.name }} entities.
+ */
+export interface Create{{ entity.name }}Dto extends {{ entity.name }}BaseDto {}
+
+/**
+ * DTO interface for updating {{ entity.name }} entities.
+ */
+export interface Update{{ entity.name }}Dto extends Partial<{{ entity.name }}BaseDto> {}
+
+/**
+ * DTO interface for {{ entity.name }} entities with ID.
+ */
+export interface {{ entity.name }}Dto extends {{ entity.name }}BaseDto {
+  /** Unique identifier */
+  id: string;
+}
+
+/**
+ * Type guard to check if an object is a {{ entity.name }}Dto.
+ * @param obj The object to check
+ * @returns True if the object is a {{ entity.name }}Dto
+ */
+export function is{{ entity.name }}Dto(obj: any): obj is {{ entity.name }}Dto {
+  return (
+    obj !== null &&
+    typeof obj === 'object' &&
+    typeof obj.id === 'string'
+    {% for property in entity.properties %}
+    {% if property.name != 'id' %}
+    {% if 'required' in property.constraints %}
+    && obj.{{ property.name }} !== undefined
+    {% endif %}
+    {% endif %}
+    {% endfor %}
+  );
+}
+
+/**
+ * Type guard to check if an array contains {{ entity.name }}Dto objects.
+ * @param obj The array to check
+ * @returns True if the array contains {{ entity.name }}Dto objects
+ */
+export function is{{ entity.name }}DtoArray(obj: any): obj is {{ entity.name }}Dto[] {
+  return Array.isArray(obj) && obj.every(is{{ entity.name }}Dto);
+}

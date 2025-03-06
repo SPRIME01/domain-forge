@@ -1,0 +1,156 @@
+"""
+Use cases for {{ entity.name }} operations.
+
+This module implements the application logic for {{ entity.name }} operations.
+"""
+
+from typing import List, Optional
+from ..dtos.{{ entity.name|lower }}_dto import {{ entity.name }}Dto, {{ entity.name }}CreateDto, {{ entity.name }}UpdateDto
+from ...domain.{{ context.name|lower }}.repositories.{{ entity.name|lower }}_repository import {{ entity.name }}Repository
+from ...domain.{{ context.name|lower }}.entities.{{ entity.name|lower }} import {{ entity.name }}
+
+
+class {{ entity.name }}UseCase:
+    """Application use cases for {{ entity.name }} operations."""
+
+    def __init__(self, repository: {{ entity.name }}Repository):
+        """
+        Initialize the use case.
+
+        Args:
+            repository: Repository for {{ entity.name }} operations
+        """
+        self._repository = repository
+
+    async def get_all(self) -> List[{{ entity.name }}Dto]:
+        """
+        Get all {{ entity.name }}s.
+
+        Returns:
+            List of {{ entity.name }} DTOs
+        """
+        entities = await self._repository.get_all()
+        return [self._to_dto(entity) for entity in entities]
+
+    async def get_by_id(self, id: str) -> Optional[{{ entity.name }}Dto]:
+        """
+        Get a {{ entity.name }} by ID.
+
+        Args:
+            id: The ID of the {{ entity.name }} to retrieve
+
+        Returns:
+            The {{ entity.name }} DTO if found, None otherwise
+        """
+        entity = await self._repository.get_by_id(id)
+        return self._to_dto(entity) if entity else None
+
+    async def create(self, data: {{ entity.name }}CreateDto) -> {{ entity.name }}Dto:
+        """
+        Create a new {{ entity.name }}.
+
+        Args:
+            data: The data for creating the {{ entity.name }}
+
+        Returns:
+            The created {{ entity.name }} DTO
+
+        Raises:
+            ValueError: If the data is invalid
+        """
+        # Convert DTO to domain entity
+        entity = {{ entity.name }}(
+            {% for property in entity.properties %}
+            {% if property.name != 'id' %}
+            {{ property.name }}=data.{{ property.name }},
+            {% endif %}
+            {% endfor %}
+        )
+
+        # Validate the entity
+        if not entity.validate():
+            raise ValueError("Invalid {{ entity.name }} data")
+
+        # Save the entity
+        created_entity = await self._repository.create(entity)
+        return self._to_dto(created_entity)
+
+    async def update(self, id: str, data: {{ entity.name }}UpdateDto) -> Optional[{{ entity.name }}Dto]:
+        """
+        Update an existing {{ entity.name }}.
+
+        Args:
+            id: The ID of the {{ entity.name }} to update
+            data: The updated data
+
+        Returns:
+            The updated {{ entity.name }} DTO if found, None otherwise
+
+        Raises:
+            ValueError: If the data is invalid
+        """
+        # Get existing entity
+        existing = await self._repository.get_by_id(id)
+        if not existing:
+            return None
+
+        # Update entity fields
+        {% for property in entity.properties %}
+        {% if property.name != 'id' %}
+        if hasattr(data, '{{ property.name }}') and data.{{ property.name }} is not None:
+            existing.{{ property.name }} = data.{{ property.name }}
+        {% endif %}
+        {% endfor %}
+
+        # Validate the updated entity
+        if not existing.validate():
+            raise ValueError("Invalid {{ entity.name }} data")
+
+        # Save the updated entity
+        updated_entity = await self._repository.update(id, existing)
+        return self._to_dto(updated_entity) if updated_entity else None
+
+    async def delete(self, id: str) -> bool:
+        """
+        Delete a {{ entity.name }}.
+
+        Args:
+            id: The ID of the {{ entity.name }} to delete
+
+        Returns:
+            True if the {{ entity.name }} was deleted, False if not found
+        """
+        return await self._repository.delete(id)
+
+    def _to_dto(self, entity: {{ entity.name }}) -> {{ entity.name }}Dto:
+        """
+        Convert a domain entity to a DTO.
+
+        Args:
+            entity: The domain entity to convert
+
+        Returns:
+            The DTO representation
+        """
+        return {{ entity.name }}Dto(
+            {% for property in entity.properties %}
+            {{ property.name }}=entity.{{ property.name }},
+            {% endfor %}
+        )
+
+    {% for method in entity.methods %}
+    async def {{ method.name }}(self{% for param in method.parameters %}, {{ param.name }}: {{ param.type }}{% if param.default_value %} = {{ param.default_value }}{% endif %}{% endfor %}){% if method.return_type %} -> {{ method.return_type }}{% endif %}:
+        """
+        {{ method.description or "Custom use case method for " + method.name }}.
+
+        {% for param in method.parameters %}
+        Args:
+            {{ param.name }}: {{ param.description or param.name }}
+        {% endfor %}
+        {% if method.return_type %}
+        Returns:
+            {{ method.return_description or "The result of the operation" }}
+        {% endif %}
+        """
+        return await self._repository.{{ method.name }}({% for param in method.parameters %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+    {% endfor %}

@@ -1,0 +1,175 @@
+/**
+ * MobX store for {{ entity.name }} entities.
+ *
+ * This store manages the state and operations for {{ entity.name }} entities.
+ */
+
+import { makeAutoObservable, runInAction } from 'mobx';
+import { {{ entity.name }}Dto, Create{{ entity.name }}Dto, Update{{ entity.name }}Dto } from '../../application/dtos/{{ entity.name|lower }}-dto';
+import { {{ entity.name }}ApiClient } from '../api/{{ entity.name|lower }}-api-client';
+
+export class {{ entity.name }}Store {
+  private _all: {{ entity.name }}Dto[] = [];
+  private _selected: {{ entity.name }}Dto | null = null;
+  private _loading = false;
+  private _error: string | null = null;
+
+  constructor(private readonly apiClient: {{ entity.name }}ApiClient) {
+    makeAutoObservable(this);
+  }
+
+  // Computed properties
+  get all(): {{ entity.name }}Dto[] {
+    return this._all;
+  }
+
+  get selected(): {{ entity.name }}Dto | null {
+    return this._selected;
+  }
+
+  get loading(): boolean {
+    return this._loading;
+  }
+
+  get error(): string | null {
+    return this._error;
+  }
+
+  // Actions
+  async fetchAll(): Promise<void> {
+    this._loading = true;
+    this._error = null;
+
+    try {
+      const data = await this.apiClient.get{{ entity.name }}s();
+      runInAction(() => {
+        this._all = data;
+      });
+    } catch (error) {
+      runInAction(() => {
+        this._error = error instanceof Error ? error.message : 'An error occurred';
+      });
+      throw error;
+    } finally {
+      runInAction(() => {
+        this._loading = false;
+      });
+    }
+  }
+
+  async fetchById(id: string): Promise<void> {
+    this._loading = true;
+    this._error = null;
+
+    try {
+      const data = await this.apiClient.get{{ entity.name }}_by_id(id);
+      runInAction(() => {
+        this._selected = data;
+      });
+    } catch (error) {
+      runInAction(() => {
+        this._error = error instanceof Error ? error.message : 'An error occurred';
+      });
+      throw error;
+    } finally {
+      runInAction(() => {
+        this._loading = false;
+      });
+    }
+  }
+
+  async create(data: Create{{ entity.name }}Dto): Promise<{{ entity.name }}Dto> {
+    this._loading = true;
+    this._error = null;
+
+    try {
+      const created = await this.apiClient.create{{ entity.name }}(data);
+      runInAction(() => {
+        this._all.push(created);
+      });
+      return created;
+    } catch (error) {
+      runInAction(() => {
+        this._error = error instanceof Error ? error.message : 'An error occurred';
+      });
+      throw error;
+    } finally {
+      runInAction(() => {
+        this._loading = false;
+      });
+    }
+  }
+
+  async update(id: string, data: Update{{ entity.name }}Dto): Promise<{{ entity.name }}Dto> {
+    this._loading = true;
+    this._error = null;
+
+    try {
+      const updated = await this.apiClient.update{{ entity.name }}(id, data);
+      runInAction(() => {
+        const index = this._all.findIndex(item => item.id === id);
+        if (index !== -1) {
+          this._all[index] = updated;
+        }
+        if (this._selected?.id === id) {
+          this._selected = updated;
+        }
+      });
+      return updated;
+    } catch (error) {
+      runInAction(() => {
+        this._error = error instanceof Error ? error.message : 'An error occurred';
+      });
+      throw error;
+    } finally {
+      runInAction(() => {
+        this._loading = false;
+      });
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    this._loading = true;
+    this._error = null;
+
+    try {
+      await this.apiClient.delete{{ entity.name }}(id);
+      runInAction(() => {
+        this._all = this._all.filter(item => item.id !== id);
+        if (this._selected?.id === id) {
+          this._selected = null;
+        }
+      });
+    } catch (error) {
+      runInAction(() => {
+        this._error = error instanceof Error ? error.message : 'An error occurred';
+      });
+      throw error;
+    } finally {
+      runInAction(() => {
+        this._loading = false;
+      });
+    }
+  }
+
+  // Helper methods
+  setSelected(entity: {{ entity.name }}Dto | null): void {
+    this._selected = entity;
+  }
+
+  clearError(): void {
+    this._error = null;
+  }
+}
+
+// Create a singleton instance and a hook for accessing the store
+let store: {{ entity.name }}Store | null = null;
+
+export function use{{ entity.name }}Store(): {{ entity.name }}Store {
+  if (!store) {
+    store = new {{ entity.name }}Store(
+      new {{ entity.name }}ApiClient(/* configure API client */)
+    );
+  }
+  return store;
+}

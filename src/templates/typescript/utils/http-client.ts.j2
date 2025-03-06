@@ -1,0 +1,59 @@
+/**
+ * HTTP client utility.
+ *
+ * This module provides a wrapper around Axios for making HTTP requests to the API.
+ */
+
+import axios, { AxiosInstance } from 'axios';
+
+export class HttpClient {
+  private readonly axios: AxiosInstance;
+
+  constructor(baseURL: string) {
+    this.axios = axios.create({
+      baseURL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    // Add response interceptor for error handling
+    this.axios.interceptors.response.use(
+      (response) => response.data,
+      (error) => {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          const message = error.response.data.detail || error.response.data.message || 'An error occurred';
+          throw new Error(message);
+        } else if (error.request) {
+          // The request was made but no response was received
+          throw new Error('No response received from server');
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          throw new Error('Error setting up the request');
+        }
+      }
+    );
+  }
+
+  async get<T>(url: string): Promise<T> {
+    return this.axios.get(url);
+  }
+
+  async post<T>(url: string, data: any): Promise<T> {
+    return this.axios.post(url, data);
+  }
+
+  async put<T>(url: string, data: any): Promise<T> {
+    return this.axios.put(url, data);
+  }
+
+  async patch<T>(url: string, data: any): Promise<T> {
+    return this.axios.patch(url, data);
+  }
+
+  async delete(url: string): Promise<void> {
+    return this.axios.delete(url);
+  }
+}

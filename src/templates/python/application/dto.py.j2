@@ -1,0 +1,50 @@
+"""
+Data Transfer Objects for {{ entity.name }} entities.
+
+This module defines the DTOs used for transferring {{ entity.name }} data between layers.
+"""
+
+from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, Field
+
+
+class {{ entity.name }}BaseDto(BaseModel):
+    """Base DTO for {{ entity.name }} data."""
+    {% for property in entity.properties %}
+    {% if property.name != 'id' %}
+    {{ property.name }}: {% if "?" in property.type %}Optional[{{ property.type|replace("?", "") }}]{% else %}{{ property.type }}{% endif %} = Field(
+        {% if property.description %}description="{{ property.description }}",{% endif %}
+        {% for constraint in property.constraints %}
+        {% if 'maxLength:' in constraint %}max_length={{ constraint.split(':')[1] }},{% endif %}
+        {% if 'minLength:' in constraint %}min_length={{ constraint.split(':')[1] }},{% endif %}
+        {% if 'min:' in constraint %}ge={{ constraint.split(':')[1] }},{% endif %}
+        {% if 'max:' in constraint %}le={{ constraint.split(':')[1] }},{% endif %}
+        {% endfor %}
+        {% if property.default_value %}default={{ property.default_value }}{% elif "?" in property.type %}default=None{% endif %}
+    )
+    {% endif %}
+    {% endfor %}
+
+    class Config:
+        """Pydantic model configuration."""
+        from_attributes = True
+
+
+class {{ entity.name }}CreateDto({{ entity.name }}BaseDto):
+    """DTO for creating {{ entity.name }} entities."""
+    pass
+
+
+class {{ entity.name }}UpdateDto({{ entity.name }}BaseDto):
+    """DTO for updating {{ entity.name }} entities."""
+    {% for property in entity.properties %}
+    {% if property.name != 'id' %}
+    {{ property.name }}: Optional[{% if "?" in property.type %}Optional[{{ property.type|replace("?", "") }}]{% else %}{{ property.type }}{% endif %}] = None
+    {% endif %}
+    {% endfor %}
+
+
+class {{ entity.name }}Dto({{ entity.name }}BaseDto):
+    """DTO for {{ entity.name }} entities with ID."""
+    id: str = Field(description="Unique identifier")

@@ -1,0 +1,107 @@
+/**
+ * {{ entity.name }} entity model.
+ *
+ * This module defines the domain model for {{ entity.name }} in the {{ context.name }} bounded context.
+ */
+
+import { EntityId } from '../../common';
+
+/**
+ * {{ entity.name }} domain entity.
+ *
+ * This module defines the {{ entity.name }} entity and its related types.
+ */
+
+{% if entity.parent %}
+import { {{ entity.parent }} } from './{{ entity.parent|lower }}';
+{% endif %}
+
+/**
+ * Input type for creating a new {{ entity.name }}.
+ */
+export interface Create{{ entity.name }}Input {
+  {% for property in entity.properties %}
+  {% if property.name != 'id' %}
+  {{ property.name }}: {{ property.type|replace("UUID", "string")|replace("String", "string")|replace("Int", "number")|replace("Decimal", "number")|replace("Float", "number")|replace("Boolean", "boolean")|replace("DateTime", "Date")|replace("Text", "string") }}{% if "?" in property.type %} | null{% endif %};
+  {% endif %}
+  {% endfor %}
+}
+
+/**
+ * Input type for updating an existing {{ entity.name }}.
+ */
+export interface Update{{ entity.name }}Input {
+  {% for property in entity.properties %}
+  {% if property.name != 'id' %}
+  {{ property.name }}?: {{ property.type|replace("UUID", "string")|replace("String", "string")|replace("Int", "number")|replace("Decimal", "number")|replace("Float", "number")|replace("Boolean", "boolean")|replace("DateTime", "Date")|replace("Text", "string") }}{% if "?" in property.type %} | null{% endif %};
+  {% endif %}
+  {% endfor %}
+}
+
+/**
+ * {{ entity.name }} domain entity class.
+ */
+export class {{ entity.name }}{% if entity.parent %} extends {{ entity.parent }}{% endif %} {
+  {% for property in entity.properties %}
+  /** {{ property.description or property.name }} */
+  {{ property.name }}: {{ property.type|replace("UUID", "string")|replace("String", "string")|replace("Int", "number")|replace("Decimal", "number")|replace("Float", "number")|replace("Boolean", "boolean")|replace("DateTime", "Date")|replace("Text", "string") }}{% if "?" in property.type %} | null{% endif %};
+  {% endfor %}
+
+  constructor(data: Partial<{{ entity.name }}> = {}) {
+    {% if entity.parent %}
+    super(data);
+    {% endif %}
+    {% for property in entity.properties %}
+    {% if not entity.parent or property.name not in entity.parent_properties %}
+    this.{{ property.name }} = data.{{ property.name }} {% if property.default_value %}?? {{ property.default_value }}{% elif "?" in property.type %}?? null{% else %}!{% endif %};
+    {% endif %}
+    {% endfor %}
+  }
+
+  /**
+   * Validates the entity.
+   * @returns True if the entity is valid, false otherwise.
+   */
+  validate(): boolean {
+    return (
+      {% for property in entity.properties %}
+      {% if 'required' in property.constraints %}
+      this.{{ property.name }} !== undefined && this.{{ property.name }} !== null{% if not loop.last %} &&{% endif %}
+      {% endif %}
+      {% endfor %}
+      true
+    );
+  }
+
+  /**
+   * Creates a copy of the entity.
+   * @returns A new instance with the same data.
+   */
+  clone(): {{ entity.name }} {
+    return new {{ entity.name }}(this);
+  }
+
+  /**
+   * Updates the entity with new data.
+   * @param data - Partial data to update with
+   */
+  update(data: Partial<{{ entity.name }}>): void {
+    Object.assign(this, data);
+  }
+
+  {% for method in entity.methods %}
+  /**
+   * {{ method.description or "Custom method " + method.name }}.
+   {% for param in method.parameters %}
+   * @param {{ param.name }} - {{ param.description or param.name }}
+   {% endfor %}
+   {% if method.return_type %}
+   * @returns {{ method.return_description or "The result" }}
+   {% endif %}
+   */
+  {{ method.name }}({% for param in method.parameters %}{{ param.name }}: {{ param.type }}{% if param.default_value %} = {{ param.default_value }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}){% if method.return_type %}: {{ method.return_type }}{% endif %} {
+    // TODO: Implement method
+    throw new Error('Method not implemented');
+  }
+  {% endfor %}
+}

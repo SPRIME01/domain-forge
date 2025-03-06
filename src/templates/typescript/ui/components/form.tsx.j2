@@ -1,0 +1,111 @@
+/**
+ * {{ entity.name }} form component.
+ *
+ * This component provides a form for creating and editing {{ entity.name }} entities.
+ * {{ ui.description }}
+ */
+
+import React from 'react';
+import { useForm } from '@mantine/form';
+import { TextInput, NumberInput, Switch, Button, Stack, Box } from '@mantine/core';
+import { DateTimePicker } from '@mantine/dates';
+import { {{ entity.name }}Dto, Create{{ entity.name }}Dto, Update{{ entity.name }}Dto } from '../../application/dtos/{{ entity.name|lower }}-dto';
+
+interface {{ entity.name }}FormProps {
+  initialValues?: {{ entity.name }}Dto;
+  onSubmit: (values: Create{{ entity.name }}Dto | Update{{ entity.name }}Dto) => void;
+  isLoading?: boolean;
+}
+
+export const {{ entity.name }}Form: React.FC<{{ entity.name }}FormProps> = ({
+  initialValues,
+  onSubmit,
+  isLoading = false,
+}) => {
+  const form = useForm({
+    initialValues: initialValues || {
+      {% for property in entity.properties %}
+      {% if property.name != 'id' %}
+      {{ property.name }}: {% if property.default_value %}{{ property.default_value }}{% else %}{% if property.type == "String" %}''{% elif property.type == "Int" or property.type == "Float" or property.type == "Decimal" %}0{% elif property.type == "Boolean" %}false{% else %}null{% endif %}{% endif %},
+      {% endif %}
+      {% endfor %}
+    },
+    validate: {
+      {% for property in entity.properties %}
+      {% if property.name != 'id' %}
+      {% if 'required' in property.constraints %}
+      {{ property.name }}: (value) => (!value ? '{{ property.name|pascalcase }} is required' : null),
+      {% endif %}
+      {% endif %}
+      {% endfor %}
+    },
+  });
+
+  const handleSubmit = (values: typeof form.values) => {
+    onSubmit(values);
+  };
+
+  return (
+    <Box component="form" onSubmit={form.onSubmit(handleSubmit)}>
+      <Stack>
+        {% for property in entity.properties %}
+        {% if property.name != 'id' %}
+        {% if property.type == "String" or property.type == "Text" %}
+        <TextInput
+          label="{{ property.name|pascalcase }}"
+          {...form.getInputProps('{{ property.name }}')}
+          {% for constraint in property.constraints %}
+          {% if 'maxLength:' in constraint %}
+          maxLength={{ constraint.split(':')[1] }}
+          {% endif %}
+          {% endfor %}
+        />
+        {% elif property.type == "Int" %}
+        <NumberInput
+          label="{{ property.name|pascalcase }}"
+          {...form.getInputProps('{{ property.name }}')}
+          {% for constraint in property.constraints %}
+          {% if 'min:' in constraint %}
+          min={{ constraint.split(':')[1] }}
+          {% endif %}
+          {% if 'max:' in constraint %}
+          max={{ constraint.split(':')[1] }}
+          {% endif %}
+          {% endfor %}
+        />
+        {% elif property.type == "Float" or property.type == "Decimal" %}
+        <NumberInput
+          label="{{ property.name|pascalcase }}"
+          {...form.getInputProps('{{ property.name }}')}
+          precision={2}
+          step={0.01}
+          {% for constraint in property.constraints %}
+          {% if 'min:' in constraint %}
+          min={{ constraint.split(':')[1] }}
+          {% endif %}
+          {% if 'max:' in constraint %}
+          max={{ constraint.split(':')[1] }}
+          {% endif %}
+          {% endfor %}
+        />
+        {% elif property.type == "Boolean" %}
+        <Switch
+          label="{{ property.name|pascalcase }}"
+          {...form.getInputProps('{{ property.name }}', { type: 'checkbox' })}
+        />
+        {% elif property.type == "DateTime" %}
+        <DateTimePicker
+          label="{{ property.name|pascalcase }}"
+          {...form.getInputProps('{{ property.name }}')}
+        />
+        {% endif %}
+        {% endif %}
+        {% endfor %}
+
+        <Button type="submit" loading={isLoading}>
+          {initialValues ? 'Update' : 'Create'} {{ entity.name }}
+        </Button>
+      </Stack>
+    </Box>
+  );
+};

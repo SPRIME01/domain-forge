@@ -1,0 +1,84 @@
+"""
+SQLAlchemy models for {{ context.name }} bounded context.
+
+This module defines the database schema using SQLAlchemy ORM models.
+"""
+
+from datetime import datetime
+from typing import Optional
+from sqlalchemy import String, Integer, Float, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .database import Base
+
+
+{% for entity in context.entities %}
+class {{ entity.name }}Model(Base):
+    """SQLAlchemy model for {{ entity.name }} entity."""
+
+    __tablename__ = '{{ entity.name|lower }}s'
+
+    {% for property in entity.properties %}
+    {% if property.type == "UUID" or property.type == "String" %}
+    {{ property.name }}: Mapped[{% if "?" in property.type %}Optional[str]{% else %}str{% endif %}] = mapped_column(
+        String{% if property.name == 'id' %}(36){% endif %},
+        primary_key={{ property.name == 'id' }},
+        nullable={{ "?" in property.type }},
+        {% for constraint in property.constraints %}
+        {% if 'maxLength:' in constraint %}
+        length={{ constraint.split(':')[1] }},
+        {% endif %}
+        {% endfor %}
+    )
+    {% elif property.type == "Int" %}
+    {{ property.name }}: Mapped[{% if "?" in property.type %}Optional[int]{% else %}int{% endif %}] = mapped_column(
+        Integer,
+        nullable={{ "?" in property.type }}
+    )
+    {% elif property.type == "Float" or property.type == "Decimal" %}
+    {{ property.name }}: Mapped[{% if "?" in property.type %}Optional[float]{% else %}float{% endif %}] = mapped_column(
+        Float,
+        nullable={{ "?" in property.type }}
+    )
+    {% elif property.type == "Boolean" %}
+    {{ property.name }}: Mapped[{% if "?" in property.type %}Optional[bool]{% else %}bool{% endif %}] = mapped_column(
+        Boolean,
+        nullable={{ "?" in property.type }}
+    )
+    {% elif property.type == "DateTime" %}
+    {{ property.name }}: Mapped[{% if "?" in property.type %}Optional[datetime]{% else %}datetime{% endif %}] = mapped_column(
+        DateTime,
+        nullable={{ "?" in property.type }}
+    )
+    {% elif property.type == "Text" %}
+    {{ property.name }}: Mapped[{% if "?" in property.type %}Optional[str]{% else %}str{% endif %}] = mapped_column(
+        Text,
+        nullable={{ "?" in property.type }}
+    )
+    {% endif %}
+    {% endfor %}
+
+    {% for relationship in entity.relationships %}
+    # Relationship with {{ relationship.target_entity }}
+    {% if relationship.type == "many_to_one" %}
+    {{ relationship.name }}_id: Mapped[str] = mapped_column(ForeignKey('{{ relationship.target_entity|lower }}s.id'))
+    {{ relationship.name }}: Mapped['{{ relationship.target_entity }}Model'] = relationship('{{ relationship.target_entity }}Model')
+    {% elif relationship.type == "one_to_many" %}
+    {{ relationship.name }}: Mapped[list['{{ relationship.target_entity }}Model']] = relationship(
+        '{{ relationship.target_entity }}Model',
+        back_populates='{{ relationship.back_populates }}'
+    )
+    {% elif relationship.type == "many_to_many" %}
+    {{ relationship.name }}: Mapped[list['{{ relationship.target_entity }}Model']] = relationship(
+        '{{ relationship.target_entity }}Model',
+        secondary='{{ entity.name|lower }}_{{ relationship.target_entity|lower }}_association',
+        back_populates='{{ relationship.back_populates }}'
+    )
+    {% endif %}
+    {% endfor %}
+
+    def __repr__(self) -> str:
+        """Get string representation of the model."""
+        return f"{{ entity.name }}(id={self.id})"
+
+{% endfor %}

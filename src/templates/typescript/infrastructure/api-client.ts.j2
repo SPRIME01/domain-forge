@@ -1,0 +1,36 @@
+/**
+ * {{ entity.name }} API client.
+ *
+ * This module provides functionality for communicating with the {{ entity.name }} API endpoints.
+ */
+
+import { HttpClient } from '../../utils/http-client';
+import { {{ entity.name }}Dto, Create{{ entity.name }}Dto, Update{{ entity.name }}Dto } from '../../application/dtos/{{ entity.name|lower }}-dto';
+
+export class {{ entity.name }}ApiClient {
+  constructor(private readonly httpClient: HttpClient) {}
+
+  {% for api in entity.apis %}
+  {% if api.http_method == 'GET' and api.path.endswith('/{id}') %}
+  async get{{ entity.name }}_by_id(id: string): Promise<{{ entity.name }}Dto> {
+    return this.httpClient.get<{{ entity.name }}Dto>(`{{ api.path|replace('{id}', '${id}') }}`);
+  }
+  {% elif api.http_method == 'GET' %}
+  async get{{ entity.name }}s(): Promise<{{ entity.name }}Dto[]> {
+    return this.httpClient.get<{{ entity.name }}Dto[]>('{{ api.path }}');
+  }
+  {% elif api.http_method == 'POST' %}
+  async create{{ entity.name }}(data: Create{{ entity.name }}Dto): Promise<{{ entity.name }}Dto> {
+    return this.httpClient.post<{{ entity.name }}Dto>('{{ api.path }}', data);
+  }
+  {% elif api.http_method == 'PUT' %}
+  async update{{ entity.name }}(id: string, data: Update{{ entity.name }}Dto): Promise<{{ entity.name }}Dto> {
+    return this.httpClient.put<{{ entity.name }}Dto>(`{{ api.path|replace('{id}', '${id}') }}`, data);
+  }
+  {% elif api.http_method == 'DELETE' %}
+  async delete{{ entity.name }}(id: string): Promise<void> {
+    return this.httpClient.delete(`{{ api.path|replace('{id}', '${id}') }}`);
+  }
+  {% endif %}
+  {% endfor %}
+}

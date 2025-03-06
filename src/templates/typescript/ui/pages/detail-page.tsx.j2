@@ -1,0 +1,98 @@
+/**
+ * {{ entity.name }} detail page.
+ *
+ * This page displays detailed information about a single {{ entity.name }} entity.
+ */
+
+import React, { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Title, Button, Group, Stack, Card, Text } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconEdit, IconTrash } from '@tabler/icons-react';
+
+import { use{{ entity.name }}Store } from '../../infrastructure/store/{{ entity.name|lower }}-store';
+
+export const {{ entity.name }}DetailPage: React.FC = observer(() => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const store = use{{ entity.name }}Store();
+  const entity = store.selected;
+
+  useEffect(() => {
+    if (id) {
+      store.fetchById(id).catch((error) => {
+        notifications.show({
+          title: 'Error',
+          message: `Failed to load {{ entity.name|lower }}: ${error.message}`,
+          color: 'red',
+        });
+        navigate('/{{ entity.name|lower }}s');
+      });
+    }
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    try {
+      await store.delete(id);
+      notifications.show({
+        title: 'Success',
+        message: '{{ entity.name }} deleted successfully',
+        color: 'green',
+      });
+      navigate('/{{ entity.name|lower }}s');
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: `Failed to delete {{ entity.name|lower }}: ${error.message}`,
+        color: 'red',
+      });
+    }
+  };
+
+  if (!entity) {
+    return null;
+  }
+
+  return (
+    <Container size="xl">
+      <Stack>
+        <Group justify="space-between">
+          <Title order={2}>{{ entity.name }} Details</Title>
+          <Group>
+            <Button
+              leftSection={<IconEdit size={16} />}
+              onClick={() => navigate(`/{{ entity.name|lower }}/${id}/edit`)}
+              variant="outline"
+            >
+              Edit
+            </Button>
+            <Button
+              leftSection={<IconTrash size={16} />}
+              onClick={handleDelete}
+              color="red"
+              variant="outline"
+            >
+              Delete
+            </Button>
+          </Group>
+        </Group>
+
+        <Card withBorder>
+          <Stack>
+            {% for property in entity.properties %}
+            <Group>
+              <Text fw={500}>{{ property.name|pascalcase }}:</Text>
+              <Text>
+                {entity.{{ property.name }}{% if property.type == 'DateTime' %}?.toLocaleString(){% endif %}}
+              </Text>
+            </Group>
+            {% endfor %}
+          </Stack>
+        </Card>
+      </Stack>
+    </Container>
+  );
+});

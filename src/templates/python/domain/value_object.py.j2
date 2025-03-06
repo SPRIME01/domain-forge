@@ -1,0 +1,93 @@
+"""
+{{ value_object.name }} value object.
+
+This module defines the {{ value_object.name }} value object in the {{ context.name }} bounded context.
+"""
+
+from dataclasses import dataclass
+from typing import Optional, Any, Dict
+from datetime import datetime
+
+
+@dataclass(frozen=True)
+class {{ value_object.name }}:
+    """
+    {{ value_object.name }} value object.
+
+    {% if value_object.description %}
+    {{ value_object.description }}
+    {% endif %}
+
+    This is an immutable value object that represents {{ value_object.description or "a domain concept" }}.
+    """
+    {% for property in value_object.properties %}
+    {{ property.name }}: {% if "?" in property.type %}Optional[{{ property.type|replace("?", "") }}]{% else %}{{ property.type }}{% endif %}{% if property.default_value %} = {{ property.default_value }}{% elif "?" in property.type %} = None{% endif %}
+    {% endfor %}
+
+    def __post_init__(self):
+        """Validate the value object after initialization."""
+        self.validate()
+
+    def validate(self) -> None:
+        """
+        Validate the value object.
+
+        Raises:
+            ValueError: If the value object is invalid
+        """
+        {% for property in value_object.properties %}
+        {% if 'required' in property.constraints %}
+        if self.{{ property.name }} is None:
+            raise ValueError("{{ property.name }} is required")
+        {% endif %}
+        {% if 'maxLength' in property.constraints %}
+        {% for constraint in property.constraints %}
+        {% if 'maxLength:' in constraint %}
+        if isinstance(self.{{ property.name }}, str) and len(self.{{ property.name }}) > {{ constraint.split(':')[1] }}:
+            raise ValueError("{{ property.name }} exceeds maximum length of {{ constraint.split(':')[1] }}")
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        {% if 'min' in property.constraints or 'max' in property.constraints %}
+        {% for constraint in property.constraints %}
+        {% if 'min:' in constraint %}
+        if isinstance(self.{{ property.name }}, (int, float)) and self.{{ property.name }} < {{ constraint.split(':')[1] }}:
+            raise ValueError("{{ property.name }} must be at least {{ constraint.split(':')[1] }}")
+        {% endif %}
+        {% if 'max:' in constraint %}
+        if isinstance(self.{{ property.name }}, (int, float)) and self.{{ property.name }} > {{ constraint.split(':')[1] }}:
+            raise ValueError("{{ property.name }} must be at most {{ constraint.split(':')[1] }}")
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        {% endfor %}
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the value object to a dictionary.
+
+        Returns:
+            Dict[str, Any]: Dictionary representation of the value object
+        """
+        return {
+            {% for property in value_object.properties %}
+            '{{ property.name }}': self.{{ property.name }},
+            {% endfor %}
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> '{{ value_object.name }}':
+        """
+        Create a value object from a dictionary.
+
+        Args:
+            data: Dictionary containing value object data
+
+        Returns:
+            {{ value_object.name }}: New value object instance
+        """
+        return cls(
+            {% for property in value_object.properties %}
+            {{ property.name }}=data.get('{{ property.name }}'{% if not "?" in property.type %}, None{% endif %}),
+            {% endfor %}
+        )

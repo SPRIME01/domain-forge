@@ -1,0 +1,68 @@
+/**
+ * {{ entity.name }} list page.
+ *
+ * This page displays a list of {{ entity.name|lower }} entities in a table format.
+ */
+
+import React, { useEffect } from 'react';
+import { observer } from 'mobx-react-lite';
+import { useNavigate } from 'react-router-dom';
+import { Container, Title, Button, Group, Stack } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconPlus } from '@tabler/icons-react';
+
+import { {{ entity.name }}Table } from '../components/{{ entity.name|lower }}-table';
+import { use{{ entity.name }}Store } from '../../infrastructure/store/{{ entity.name|lower }}-store';
+
+export const {{ entity.name }}ListPage: React.FC = observer(() => {
+  const navigate = useNavigate();
+  const store = use{{ entity.name }}Store();
+
+  useEffect(() => {
+    store.fetchAll().catch((error) => {
+      notifications.show({
+        title: 'Error',
+        message: `Failed to load {{ entity.name|lower }}s: ${error.message}`,
+        color: 'red',
+      });
+    });
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await store.delete(id);
+      notifications.show({
+        title: 'Success',
+        message: '{{ entity.name }} deleted successfully',
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Error',
+        message: `Failed to delete {{ entity.name|lower }}: ${error.message}`,
+        color: 'red',
+      });
+    }
+  };
+
+  return (
+    <Container size="xl">
+      <Stack>
+        <Group justify="space-between">
+          <Title order={2}>{{ entity.name }}s</Title>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            onClick={() => navigate('/{{ entity.name|lower }}/new')}
+          >
+            Create {{ entity.name }}
+          </Button>
+        </Group>
+
+        <{{ entity.name }}Table
+          data={store.all}
+          onDelete={handleDelete}
+        />
+      </Stack>
+    </Container>
+  );
+});

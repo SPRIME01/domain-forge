@@ -1,0 +1,223 @@
+"""
+Unit tests for {{ entity.name }} use cases.
+
+This module contains tests for the {{ entity.name }} use cases in the {{ context.name }} bounded context.
+"""
+
+import pytest
+from datetime import datetime
+from unittest.mock import AsyncMock, Mock
+from uuid import uuid4
+
+from ..dtos.{{ entity.name|lower }}_dto import {{ entity.name }}Dto, {{ entity.name }}CreateDto, {{ entity.name }}UpdateDto
+from .{{ entity.name|lower }}_use_case import {{ entity.name }}UseCase
+from ...domain.{{ context.name|lower }}.entities.{{ entity.name|lower }} import {{ entity.name }}
+
+
+@pytest.fixture
+def mock_repository():
+    """Fixture providing a mock repository."""
+    return Mock()
+
+
+@pytest.fixture
+def use_case(mock_repository):
+    """Fixture providing a use case instance with a mock repository."""
+    return {{ entity.name }}UseCase(mock_repository)
+
+
+@pytest.fixture
+def valid_entity_data():
+    """Fixture providing valid data for creating a {{ entity.name }}."""
+    return {
+        'id': str(uuid4()),
+        {% for property in entity.properties %}
+        {% if property.name != 'id' %}
+        '{{ property.name }}': {% if property.default_value %}{{ property.default_value }}{% elif property.type == "String" %}'test-{{ property.name }}'{% elif property.type == "Int" %}1{% elif property.type == "Float" or property.type == "Decimal" %}1.0{% elif property.type == "Boolean" %}True{% elif property.type == "DateTime" %}datetime.now(){% elif property.type == "UUID" %}str(uuid4()){% else %}None{% endif %},
+        {% endif %}
+        {% endfor %}
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_all(use_case, mock_repository, valid_entity_data):
+    """Test getting all {{ entity.name }} entities."""
+    # Arrange
+    entity = {{ entity.name }}(**valid_entity_data)
+    mock_repository.get_all = AsyncMock(return_value=[entity])
+
+    # Act
+    result = await use_case.get_all()
+
+    # Assert
+    assert len(result) == 1
+    dto = result[0]
+    assert isinstance(dto, {{ entity.name }}Dto)
+    {% for property in entity.properties %}
+    assert dto.{{ property.name }} == entity.{{ property.name }}
+    {% endfor %}
+    mock_repository.get_all.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_get_by_id(use_case, mock_repository, valid_entity_data):
+    """Test getting a {{ entity.name }} by ID."""
+    # Arrange
+    entity = {{ entity.name }}(**valid_entity_data)
+    mock_repository.get_by_id = AsyncMock(return_value=entity)
+
+    # Act
+    result = await use_case.get_by_id(entity.id)
+
+    # Assert
+    assert isinstance(result, {{ entity.name }}Dto)
+    {% for property in entity.properties %}
+    assert result.{{ property.name }} == entity.{{ property.name }}
+    {% endfor %}
+    mock_repository.get_by_id.assert_awaited_once_with(entity.id)
+
+
+@pytest.mark.asyncio
+async def test_get_by_id_not_found(use_case, mock_repository):
+    """Test getting a non-existent {{ entity.name }}."""
+    # Arrange
+    mock_repository.get_by_id = AsyncMock(return_value=None)
+    id = str(uuid4())
+
+    # Act
+    result = await use_case.get_by_id(id)
+
+    # Assert
+    assert result is None
+    mock_repository.get_by_id.assert_awaited_once_with(id)
+
+
+@pytest.mark.asyncio
+async def test_create(use_case, mock_repository, valid_entity_data):
+    """Test creating a {{ entity.name }}."""
+    # Arrange
+    create_data = {
+        {% for property in entity.properties %}
+        {% if property.name != 'id' %}
+        '{{ property.name }}': valid_entity_data['{{ property.name }}'],
+        {% endif %}
+        {% endfor %}
+    }
+    create_dto = {{ entity.name }}CreateDto(**create_data)
+    entity = {{ entity.name }}(**valid_entity_data)
+    mock_repository.create = AsyncMock(return_value=entity)
+
+    # Act
+    result = await use_case.create(create_dto)
+
+    # Assert
+    assert isinstance(result, {{ entity.name }}Dto)
+    {% for property in entity.properties %}
+    assert result.{{ property.name }} == entity.{{ property.name }}
+    {% endfor %}
+    mock_repository.create.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_create_with_invalid_data(use_case, mock_repository, valid_entity_data):
+    """Test creating a {{ entity.name }} with invalid data."""
+    # Arrange
+    create_data = {
+        {% for property in entity.properties %}
+        {% if property.name != 'id' and 'required' in property.constraints %}
+        '{{ property.name }}': None,  # Required field
+        {% elif property.name != 'id' %}
+        '{{ property.name }}': valid_entity_data['{{ property.name }}'],
+        {% endif %}
+        {% endfor %}
+    }
+    create_dto = {{ entity.name }}CreateDto(**create_data)
+
+    # Act & Assert
+    with pytest.raises(ValueError):
+        await use_case.create(create_dto)
+    mock_repository.create.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_update(use_case, mock_repository, valid_entity_data):
+    """Test updating a {{ entity.name }}."""
+    # Arrange
+    entity = {{ entity.name }}(**valid_entity_data)
+    updated_data = {
+        {% for property in entity.properties %}
+        {% if property.name != 'id' %}
+        '{{ property.name }}': {% if property.default_value %}{{ property.default_value }}{% elif property.type == "String" %}'updated-{{ property.name }}'{% elif property.type == "Int" %}2{% elif property.type == "Float" or property.type == "Decimal" %}2.0{% elif property.type == "Boolean" %}False{% elif property.type == "DateTime" %}datetime.now(){% elif property.type == "UUID" %}str(uuid4()){% else %}None{% endif %},
+        {% endif %}
+        {% endfor %}
+    }
+    update_dto = {{ entity.name }}UpdateDto(**updated_data)
+    updated_entity = {{ entity.name }}(id=entity.id, **updated_data)
+    mock_repository.get_by_id = AsyncMock(return_value=entity)
+    mock_repository.update = AsyncMock(return_value=updated_entity)
+
+    # Act
+    result = await use_case.update(entity.id, update_dto)
+
+    # Assert
+    assert isinstance(result, {{ entity.name }}Dto)
+    {% for property in entity.properties %}
+    {% if property.name != 'id' %}
+    assert result.{{ property.name }} == updated_data['{{ property.name }}']
+    {% endif %}
+    {% endfor %}
+    mock_repository.get_by_id.assert_awaited_once_with(entity.id)
+    mock_repository.update.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_update_not_found(use_case, mock_repository):
+    """Test updating a non-existent {{ entity.name }}."""
+    # Arrange
+    id = str(uuid4())
+    update_dto = {{ entity.name }}UpdateDto()
+    mock_repository.get_by_id = AsyncMock(return_value=None)
+
+    # Act
+    result = await use_case.update(id, update_dto)
+
+    # Assert
+    assert result is None
+    mock_repository.get_by_id.assert_awaited_once_with(id)
+    mock_repository.update.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_delete(use_case, mock_repository):
+    """Test deleting a {{ entity.name }}."""
+    # Arrange
+    id = str(uuid4())
+    mock_repository.delete = AsyncMock(return_value=True)
+
+    # Act
+    result = await use_case.delete(id)
+
+    # Assert
+    assert result is True
+    mock_repository.delete.assert_awaited_once_with(id)
+
+
+{% for method in entity.methods %}
+@pytest.mark.asyncio
+async def test_{{ method.name }}(use_case, mock_repository):
+    """Test {{ method.name }} method."""
+    # Arrange
+    {% for param in method.parameters %}
+    {{ param.name }} = {% if param.default_value %}{{ param.default_value }}{% elif param.type == "str" %}'test'{% elif param.type == "int" %}1{% elif param.type == "float" %}1.0{% elif param.type == "bool" %}True{% else %}None{% endif %}
+    {% endfor %}
+    expected_result = None  # TODO: Set appropriate expected result
+    mock_repository.{{ method.name }} = AsyncMock(return_value=expected_result)
+
+    # Act
+    result = await use_case.{{ method.name }}({% for param in method.parameters %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+
+    # Assert
+    assert result == expected_result
+    mock_repository.{{ method.name }}.assert_awaited_once_with({% for param in method.parameters %}{{ param.name }}{% if not loop.last %}, {% endif %}{% endfor %})
+
+{% endfor %}
