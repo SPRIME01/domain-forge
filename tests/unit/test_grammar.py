@@ -280,3 +280,58 @@ def test_parse_service_with_method(parser):
     assert method.children[1].children[0].children[0] == Token("IDENTIFIER", "param")
     assert method.children[1].children[0].children[1] == Token("IDENTIFIER", "String")
     assert method.children[2] == Token("IDENTIFIER", "Void")
+
+def test_parse_ui_component(parser):
+    dsl = """
+    @Context {
+        #Entity {
+            ui: Form {
+                description: "A form for the entity"
+            }
+        }
+    }
+    """
+    tree = parser.parse(dsl)
+    assert isinstance(tree, Tree)
+    assert tree.data == "start"
+    assert len(tree.children) == 1
+    context = tree.children[0]
+    assert context.data == "context_definition"
+    assert len(context.children) == 2
+    assert context.children[0] == Token("IDENTIFIER", "Context")
+    entity = context.children[1].children[0]
+    assert entity.data == "entity_definition"
+    assert entity.children[0] == Token("IDENTIFIER", "Entity")
+    ui_component = entity.children[1]
+    assert ui_component.data == "ui_definition"
+    assert ui_component.children[0] == Token("UI_COMPONENT", "Form")
+    assert ui_component.children[1].data == "description"
+    assert ui_component.children[1].children[0] == Token("STRING", '"A form for the entity"')
+
+def test_parse_api_definition(parser):
+    dsl = """
+    @Context {
+        #Entity {
+            api: GET "/entities" {
+                description: "Get all entities"
+            }
+        }
+    }
+    """
+    tree = parser.parse(dsl)
+    assert isinstance(tree, Tree)
+    assert tree.data == "start"
+    assert len(tree.children) == 1
+    context = tree.children[0]
+    assert context.data == "context_definition"
+    assert len(context.children) == 2
+    assert context.children[0] == Token("IDENTIFIER", "Context")
+    entity = context.children[1].children[0]
+    assert entity.data == "entity_definition"
+    assert entity.children[0] == Token("IDENTIFIER", "Entity")
+    api_definition = entity.children[1]
+    assert api_definition.data == "api_definition"
+    assert api_definition.children[0] == Token("HTTP_METHOD", "GET")
+    assert api_definition.children[1] == Token("STRING", '"/entities"')
+    assert api_definition.children[2].data == "description"
+    assert api_definition.children[2].children[0] == Token("STRING", '"Get all entities"')

@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from src.infrastructure.app import app
-from src.infrastructure.database import get_session, init_database
+from src.infrastructure.database import get_session, init_database, Base
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from src.config.settings import get_settings
