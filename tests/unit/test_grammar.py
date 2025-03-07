@@ -3,194 +3,91 @@ from lark import Lark, Tree, Token
 
 @pytest.fixture
 def parser():
-    grammar = """
-    %import common.WS
-    %import common.INT
-    %import common.FLOAT
-    %import common.WORD
-    %import common.ESCAPED_STRING
-    %ignore WS
+    # Define the grammar using Lark's EBNF syntax - with explicit tree structure
+    grammar = r"""
+    start: context_definition+
 
-    // --------------------- Terminals ---------------------
+    context_definition: "@" IDENTIFIER "{" context_children "}"
+    context_children: (entity_definition | value_object_definition | event_definition | service_definition | repository_definition | module_definition | role_definition | relationship_definition)*
 
-    // MODIFIERS: Modify relationships to indicate obligations or permissions.
-    MODIFIER: "!"    // Must (Obligation)
-            | "~"   // Should (Recommendation)
-            | "?"   // May (Permission)
+    entity_definition: "#" IDENTIFIER entity_inheritance? "{" entity_children "}"
+    entity_inheritance: ":" IDENTIFIER
+    entity_children: (property_definition | method_definition | api_definition | ui_definition)*
 
-    // ENTITY SYMBOLS: Indicate the type of an entity.
-    ENTITY_SYMBOL: "#"    // Entity (aggregate root)
-                | "%"    // Value object
-                | "^"    // Event
-                | ">>"   // Service/Process
-                | "&"    // Role/Actor
-                | "@"    // Context/Bounded Context
-                | "$"    // Repository
-                | "*"    // Module/Package
+    value_object_definition: "%" IDENTIFIER "{" property_definition* "}"
+    event_definition: "^" IDENTIFIER "{" property_definition* "}"
+    service_definition: ">>" IDENTIFIER "{" service_children "}"
+    service_children: (method_definition | api_definition)*
+    repository_definition: "$" IDENTIFIER "{" method_definition* "}"
+    module_definition: "*" IDENTIFIER "{" module_children "}"
+    module_children: (entity_definition | value_object_definition | event_definition | service_definition | repository_definition)*
+    role_definition: "&" IDENTIFIER "{" property_definition* "}"
 
-    // RELATIONSHIP SYMBOLS: Represent various relationship types.
-    RELATIONSHIP_SYMBOL: "=>"      // Dependency / Uses
-                    | "<->"      // Bidirectional Association
-                    | "--"       // Association
-                    | "->"       // One-way Association
-                    | "."        // Composition
-                    | "::"       // Inheritance
-                    | "/"        // Implementation
-                    | "="        // Equivalence
+    property_definition: IDENTIFIER ":" type_definition property_default? property_constraint?
+    property_default: "=" default_value
+    property_constraint: "[" constraint+ "]"
 
-    // API and UI annotations
+    type_definition: simple_type | generic_type | list_type | dict_type
+    simple_type: IDENTIFIER
+    generic_type: IDENTIFIER "<" IDENTIFIER ">"
+    list_type: "List" "<" type_definition ">"
+    dict_type: "Dict" "<" type_definition ":" type_definition ">"
+
+    method_definition: visibility? IDENTIFIER "(" parameter_list? ")" return_type? method_body?
+    visibility: VISIBILITY
+    return_type: ":" type_definition
+    method_body: "{" description? "}"
+
+    parameter_list: parameter ("," parameter)*
+    parameter: IDENTIFIER ":" type_definition parameter_default?
+    parameter_default: "=" default_value
+
+    default_value: INT | FLOAT | STRING | IDENTIFIER | list_value
+    list_value: "[" value_list? "]"
+    value_list: value ("," value)*
+    value: INT | FLOAT | STRING | IDENTIFIER | list_value
+
+    constraint: "required" | "unique" | min_constraint | max_constraint | pattern_constraint | fk_constraint
+    min_constraint: "min" ":" INT
+    max_constraint: "max" ":" INT
+    pattern_constraint: "pattern" ":" STRING
+    fk_constraint: "foreign_key" ":" IDENTIFIER
+
+    relationship_definition: source_entity RELATIONSHIP_SYMBOL target_entity relationship_desc?
+    relationship_desc: "{" description? "}"
+    source_entity: IDENTIFIER
+    target_entity: IDENTIFIER
+
+    description: STRING
+
+    api_definition: "api" ":" HTTP_METHOD STRING api_params? api_return? api_desc?
+    api_params: "(" parameter_list? ")"
+    api_return: ":" type_definition
+    api_desc: "{" description? "}"
+
+    ui_definition: "ui" ":" UI_COMPONENT ui_params? ui_desc?
+    ui_params: "(" parameter_list? ")"
+    ui_desc: "{" description? "}"
+
+    // Terminals
+    IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+    RELATIONSHIP_SYMBOL: "=>" | "<->" | "--" | "->" | "." | "::" | "/" | "="
     HTTP_METHOD: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
     UI_COMPONENT: "Form" | "Table" | "Card" | "Detail" | "List"
     VISIBILITY: "public" | "private" | "protected"
 
-    // Symbols used for grouping expressions
-    LPAREN: "("
-    RPAREN: ")"
-    LSQBRACKET: "["
-    RSQBRACKET: "]"
-    LCURLYBRACE: "{"
-    RCURLYBRACE: "}"
-    LANGELED: "<"
-    RANGELED: ">"
+    STRING: /"[^"]*"/
 
-    // Other separators
-    ITEM_SEPARATOR: ","           // Separator in groups and collections
-    COLON: ":"
-    EQUALS: "="
+    %import common.INT
+    %import common.FLOAT
+    %import common.WS
 
-    // Comments
-    COMMENT: /\/\/[^\n]*/         // Single-line comments
-        | /\/\*[\s\S]*?\*\//    // Multi-line comments
+    COMMENT: /\/\/[^\n]*/ | /\/\*[\s\S]*?\*\//
     %ignore COMMENT
-
-    // IDENTIFIERS: Names for entities.
-    IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
-
-    // String literals
-    STRING: ESCAPED_STRING
-
-    // --------------------- Grammar Rules ---------------------
-
-    // A complete domain model consists of one or more bounded contexts
-    start: context_definition+
-
-    // A bounded context defines a subsystem boundary
-    context_definition: "@" IDENTIFIER LCURLYBRACE
-                        (entity_definition
-                        | value_object_definition
-                        | event_definition
-                        | service_definition
-                        | repository_definition
-                        | module_definition
-                        | role_definition)*
-                    RCURLYBRACE
-
-    // Entity - aggregate root
-    entity_definition: "#" IDENTIFIER (COLON IDENTIFIER)? LCURLYBRACE
-                        (property_definition
-                        | method_definition
-                        | api_definition
-                        | ui_definition)*
-                    RCURLYBRACE
-
-    // Value Object - immutable with no identity
-    value_object_definition: "%" IDENTIFIER LCURLYBRACE
-                            property_definition*
-                        RCURLYBRACE
-
-    // Event definition
-    event_definition: "^" IDENTIFIER LCURLYBRACE
-                    property_definition*
-                    RCURLYBRACE
-
-    // Service definition
-    service_definition: ">>" IDENTIFIER LCURLYBRACE
-                        (method_definition | api_definition)*
-                    RCURLYBRACE
-
-    // Repository definition
-    repository_definition: "$" IDENTIFIER LCURLYBRACE
-                        method_definition*
-                    RCURLYBRACE
-
-    // Module definition
-    module_definition: "*" IDENTIFIER LCURLYBRACE
-                        (entity_definition
-                        | value_object_definition
-                        | event_definition
-                        | service_definition
-                        | repository_definition)*
-                    RCURLYBRACE
-
-    // Role definition
-    role_definition: "&" IDENTIFIER LCURLYBRACE
-                    property_definition*
-                    RCURLYBRACE
-
-    // Property definition
-    property_definition: IDENTIFIER COLON type_definition (EQUALS default_value)?
-                        (LSQBRACKET constraint+ RSQBRACKET)?
-
-    // Type definition including collections
-    type_definition: IDENTIFIER              -> simple_type
-                | IDENTIFIER LANGLED IDENTIFIER RANGLED  -> generic_type
-                | "List" LANGLED type_definition RANGLED -> list_type
-                | "Dict" LANGLED type_definition COLON type_definition RANGLED -> dict_type
-
-    // Method definition
-    method_definition: (VISIBILITY)? IDENTIFIER LPAREN parameter_list? RPAREN (COLON type_definition)?
-                        (LCURLYBRACE description? RCURLYBRACE)?
-
-    // Parameter list
-    parameter_list: parameter (ITEM_SEPARATOR parameter)*
-
-    // Parameter
-    parameter: IDENTIFIER COLON type_definition (EQUALS default_value)?
-
-    // Default value
-    default_value: INT
-                | FLOAT
-                | STRING
-                | IDENTIFIER
-                | LSQBRACKET value_list? RSQBRACKET
-
-    // Value list
-    value_list: value (ITEM_SEPARATOR value)*
-
-    // Value
-    value: INT
-        | FLOAT
-        | STRING
-        | IDENTIFIER
-        | LSQBRACKET value_list? RSQBRACKET
-
-    // Constraint
-    constraint: "required"
-            | "unique"
-            | "min" COLON INT
-            | "max" COLON INT
-            | "pattern" COLON STRING
-            | "foreign_key" COLON IDENTIFIER
-
-    // Relationship definition
-    relationship_definition: source_entity RELATIONSHIP_SYMBOL target_entity (LCURLYBRACE description RCURLYBRACE)?
-
-    // Source and target entities
-    source_entity: IDENTIFIER
-    target_entity: IDENTIFIER
-
-    // Description
-    description: STRING
-
-    // API definition
-    api_definition: "api" COLON HTTP_METHOD STRING (LPAREN parameter_list? RPAREN)?
-                (COLON type_definition)? (LCURLYBRACE description? RCURLYBRACE)?
-
-    // UI definition
-    ui_definition: "ui" COLON UI_COMPONENT (LPAREN parameter_list? RPAREN)?
-                (LCURLYBRACE description? RCURLYBRACE)?
+    %ignore WS
     """
-    return Lark(grammar, start='start', parser='lalr')
+
+    return Lark(grammar, parser='lalr')
 
 def test_parse_simple_entity(parser):
     dsl = """
@@ -204,16 +101,31 @@ def test_parse_simple_entity(parser):
     assert isinstance(tree, Tree)
     assert tree.data == "start"
     assert len(tree.children) == 1
+
     context = tree.children[0]
     assert context.data == "context_definition"
-    assert len(context.children) == 2
     assert context.children[0] == Token("IDENTIFIER", "Context")
-    entity = context.children[1].children[0]
+
+    context_children = context.children[1]
+    assert context_children.data == "context_children"
+
+    entity = context_children.children[0]
     assert entity.data == "entity_definition"
     assert entity.children[0] == Token("IDENTIFIER", "Entity")
-    assert entity.children[1].data == "property_definition"
-    assert entity.children[1].children[0] == Token("IDENTIFIER", "name")
-    assert entity.children[1].children[1] == Token("IDENTIFIER", "String")
+
+    entity_children = entity.children[1]
+    assert entity_children.data == "entity_children"
+
+    prop = entity_children.children[0]
+    assert prop.data == "property_definition"
+    assert prop.children[0] == Token("IDENTIFIER", "name")
+
+    prop_type = prop.children[1]
+    assert prop_type.data == "type_definition"
+
+    simple_type = prop_type.children[0]
+    assert simple_type.data == "simple_type"
+    assert simple_type.children[0] == Token("IDENTIFIER", "String")
 
 def test_parse_relationship(parser):
     dsl = """
@@ -230,28 +142,35 @@ def test_parse_relationship(parser):
     tree = parser.parse(dsl)
     assert isinstance(tree, Tree)
     assert tree.data == "start"
-    assert len(tree.children) == 1
+
     context = tree.children[0]
     assert context.data == "context_definition"
-    assert len(context.children) == 4
     assert context.children[0] == Token("IDENTIFIER", "Context")
-    entity1 = context.children[1].children[0]
+
+    context_children = context.children[1]
+    assert context_children.data == "context_children"
+
+    entity1 = context_children.children[0]
     assert entity1.data == "entity_definition"
     assert entity1.children[0] == Token("IDENTIFIER", "Entity1")
-    assert entity1.children[1].data == "property_definition"
-    assert entity1.children[1].children[0] == Token("IDENTIFIER", "name")
-    assert entity1.children[1].children[1] == Token("IDENTIFIER", "String")
-    entity2 = context.children[2].children[0]
+
+    entity2 = context_children.children[1]
     assert entity2.data == "entity_definition"
     assert entity2.children[0] == Token("IDENTIFIER", "Entity2")
-    assert entity2.children[1].data == "property_definition"
-    assert entity2.children[1].children[0] == Token("IDENTIFIER", "description")
-    assert entity2.children[1].children[1] == Token("IDENTIFIER", "String")
-    relationship = context.children[3]
+
+    relationship = context_children.children[2]
     assert relationship.data == "relationship_definition"
-    assert relationship.children[0] == Token("IDENTIFIER", "Entity1")
-    assert relationship.children[1] == Token("RELATIONSHIP_SYMBOL", "->")
-    assert relationship.children[2] == Token("IDENTIFIER", "Entity2")
+
+    source = relationship.children[0]
+    assert source.data == "source_entity"
+    assert source.children[0] == Token("IDENTIFIER", "Entity1")
+
+    rel_symbol = relationship.children[1]
+    assert rel_symbol == Token("RELATIONSHIP_SYMBOL", "->")
+
+    target = relationship.children[2]
+    assert target.data == "target_entity"
+    assert target.children[0] == Token("IDENTIFIER", "Entity2")
 
 def test_parse_service_with_method(parser):
     dsl = """
@@ -264,29 +183,55 @@ def test_parse_service_with_method(parser):
     tree = parser.parse(dsl)
     assert isinstance(tree, Tree)
     assert tree.data == "start"
-    assert len(tree.children) == 1
+
     context = tree.children[0]
     assert context.data == "context_definition"
-    assert len(context.children) == 2
     assert context.children[0] == Token("IDENTIFIER", "Context")
-    service = context.children[1].children[0]
+
+    context_children = context.children[1]
+    assert context_children.data == "context_children"
+
+    service = context_children.children[0]
     assert service.data == "service_definition"
     assert service.children[0] == Token("IDENTIFIER", "Service")
-    method = service.children[1]
+
+    service_children = service.children[1]
+    assert service_children.data == "service_children"
+
+    method = service_children.children[0]
     assert method.data == "method_definition"
     assert method.children[0] == Token("IDENTIFIER", "doSomething")
-    assert method.children[1].data == "parameter_list"
-    assert method.children[1].children[0].data == "parameter"
-    assert method.children[1].children[0].children[0] == Token("IDENTIFIER", "param")
-    assert method.children[1].children[0].children[1] == Token("IDENTIFIER", "String")
-    assert method.children[2] == Token("IDENTIFIER", "Void")
+
+    param_list = method.children[1]
+    assert param_list.data == "parameter_list"
+
+    param = param_list.children[0]
+    assert param.data == "parameter"
+    assert param.children[0] == Token("IDENTIFIER", "param")
+
+    param_type = param.children[1]
+    assert param_type.data == "type_definition"
+
+    simple_type = param_type.children[0]
+    assert simple_type.data == "simple_type"
+    assert simple_type.children[0] == Token("IDENTIFIER", "String")
+
+    return_type = method.children[2]
+    assert return_type.data == "return_type"
+
+    return_type_def = return_type.children[0]
+    assert return_type_def.data == "type_definition"
+
+    return_simple_type = return_type_def.children[0]
+    assert return_simple_type.data == "simple_type"
+    assert return_simple_type.children[0] == Token("IDENTIFIER", "Void")
 
 def test_parse_ui_component(parser):
     dsl = """
     @Context {
         #Entity {
             ui: Form {
-                description: "A form for the entity"
+                "A form for the entity"
             }
         }
     }
@@ -294,26 +239,38 @@ def test_parse_ui_component(parser):
     tree = parser.parse(dsl)
     assert isinstance(tree, Tree)
     assert tree.data == "start"
-    assert len(tree.children) == 1
+
     context = tree.children[0]
     assert context.data == "context_definition"
-    assert len(context.children) == 2
     assert context.children[0] == Token("IDENTIFIER", "Context")
-    entity = context.children[1].children[0]
+
+    context_children = context.children[1]
+    assert context_children.data == "context_children"
+
+    entity = context_children.children[0]
     assert entity.data == "entity_definition"
     assert entity.children[0] == Token("IDENTIFIER", "Entity")
-    ui_component = entity.children[1]
-    assert ui_component.data == "ui_definition"
-    assert ui_component.children[0] == Token("UI_COMPONENT", "Form")
-    assert ui_component.children[1].data == "description"
-    assert ui_component.children[1].children[0] == Token("STRING", '"A form for the entity"')
+
+    entity_children = entity.children[1]
+    assert entity_children.data == "entity_children"
+
+    ui = entity_children.children[0]
+    assert ui.data == "ui_definition"
+    assert ui.children[0] == Token("UI_COMPONENT", "Form")
+
+    ui_desc = ui.children[1]
+    assert ui_desc.data == "ui_desc"
+
+    description = ui_desc.children[0]
+    assert description.data == "description"
+    assert description.children[0] == Token("STRING", '"A form for the entity"')
 
 def test_parse_api_definition(parser):
     dsl = """
     @Context {
         #Entity {
             api: GET "/entities" {
-                description: "Get all entities"
+                "Get all entities"
             }
         }
     }
@@ -321,17 +278,29 @@ def test_parse_api_definition(parser):
     tree = parser.parse(dsl)
     assert isinstance(tree, Tree)
     assert tree.data == "start"
-    assert len(tree.children) == 1
+
     context = tree.children[0]
     assert context.data == "context_definition"
-    assert len(context.children) == 2
     assert context.children[0] == Token("IDENTIFIER", "Context")
-    entity = context.children[1].children[0]
+
+    context_children = context.children[1]
+    assert context_children.data == "context_children"
+
+    entity = context_children.children[0]
     assert entity.data == "entity_definition"
     assert entity.children[0] == Token("IDENTIFIER", "Entity")
-    api_definition = entity.children[1]
-    assert api_definition.data == "api_definition"
-    assert api_definition.children[0] == Token("HTTP_METHOD", "GET")
-    assert api_definition.children[1] == Token("STRING", '"/entities"')
-    assert api_definition.children[2].data == "description"
-    assert api_definition.children[2].children[0] == Token("STRING", '"Get all entities"')
+
+    entity_children = entity.children[1]
+    assert entity_children.data == "entity_children"
+
+    api = entity_children.children[0]
+    assert api.data == "api_definition"
+    assert api.children[0] == Token("HTTP_METHOD", "GET")
+    assert api.children[1] == Token("STRING", '"/entities"')
+
+    api_desc = api.children[2]
+    assert api_desc.data == "api_desc"
+
+    description = api_desc.children[0]
+    assert description.data == "description"
+    assert description.children[0] == Token("STRING", '"Get all entities"')

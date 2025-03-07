@@ -106,21 +106,48 @@ class DomainForgeInterpreter:
         # Track all defined names to catch duplicates
         defined_names: Dict[str, str] = {}
 
+        # First pass: Register all names
         for context in model.bounded_contexts:
             # Check for duplicate context names
             if context.name in defined_names:
                 errors.append(f"Duplicate bounded context name: {context.name}")
             defined_names[context.name] = "context"
 
-            # Validate entities
+            # Register entity names
             for entity in context.entities:
-                # Check for duplicate entity names
                 if entity.name in defined_names:
                     errors.append(
                         f"Duplicate entity name in context {context.name}: {entity.name}"
                     )
                 defined_names[entity.name] = "entity"
 
+            # Register value objects
+            for vo in context.value_objects:
+                if vo.name in defined_names:
+                    errors.append(
+                        f"Duplicate value object name in context {context.name}: {vo.name}"
+                    )
+                defined_names[vo.name] = "value_object"
+
+            # Register services
+            for service in context.services:
+                if service.name in defined_names:
+                    errors.append(
+                        f"Duplicate service name in context {context.name}: {service.name}"
+                    )
+                defined_names[service.name] = "service"
+
+            # Register repositories
+            for repo in context.repositories:
+                if repo.name in defined_names:
+                    errors.append(
+                        f"Duplicate repository name in context {context.name}: {repo.name}"
+                    )
+                defined_names[repo.name] = "repository"
+
+        # Second pass: Validate relationships and properties
+        for context in model.bounded_contexts:
+            for entity in context.entities:
                 # Validate entity properties
                 property_names = set()
                 for prop in entity.properties:
@@ -130,37 +157,13 @@ class DomainForgeInterpreter:
                         )
                     property_names.add(prop.name)
 
-                # Validate relationships
+                # Validate relationships after all entities are registered
                 for rel in entity.relationships:
                     # Check that target entities exist
                     if rel.target_entity not in defined_names:
                         errors.append(
                             f"Unknown target entity in relationship: {rel.target_entity}"
                         )
-
-            # Validate value objects
-            for vo in context.value_objects:
-                if vo.name in defined_names:
-                    errors.append(
-                        f"Duplicate value object name in context {context.name}: {vo.name}"
-                    )
-                defined_names[vo.name] = "value_object"
-
-            # Validate services
-            for service in context.services:
-                if service.name in defined_names:
-                    errors.append(
-                        f"Duplicate service name in context {context.name}: {service.name}"
-                    )
-                defined_names[service.name] = "service"
-
-            # Validate repositories
-            for repo in context.repositories:
-                if repo.name in defined_names:
-                    errors.append(
-                        f"Duplicate repository name in context {context.name}: {repo.name}"
-                    )
-                defined_names[repo.name] = "repository"
 
         if errors:
             raise ValueError("Model validation failed:\n" + "\n".join(errors))

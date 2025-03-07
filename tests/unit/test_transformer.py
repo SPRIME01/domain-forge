@@ -27,11 +27,19 @@ def test_transform_simple_entity(transformer):
     tree = Tree("start", [
         Tree("context_definition", [
             Token("IDENTIFIER", "Context"),
-            Tree("entity_definition", [
-                Token("IDENTIFIER", "Entity"),
-                Tree("property_definition", [
-                    Token("IDENTIFIER", "name"),
-                    Token("IDENTIFIER", "String")
+            Tree("context_children", [
+                Tree("entity_definition", [
+                    Token("IDENTIFIER", "Entity"),
+                    Tree("entity_children", [
+                        Tree("property_definition", [
+                            Token("IDENTIFIER", "name"),
+                            Tree("type_definition", [
+                                Tree("simple_type", [
+                                    Token("IDENTIFIER", "String")
+                                ])
+                            ])
+                        ])
+                    ])
                 ])
             ])
         ])
@@ -53,24 +61,42 @@ def test_transform_relationship(transformer):
     tree = Tree("start", [
         Tree("context_definition", [
             Token("IDENTIFIER", "Context"),
-            Tree("entity_definition", [
-                Token("IDENTIFIER", "Entity1"),
-                Tree("property_definition", [
-                    Token("IDENTIFIER", "name"),
-                    Token("IDENTIFIER", "String")
+            Tree("context_children", [
+                Tree("entity_definition", [
+                    Token("IDENTIFIER", "Entity1"),
+                    Tree("entity_children", [
+                        Tree("property_definition", [
+                            Token("IDENTIFIER", "name"),
+                            Tree("type_definition", [
+                                Tree("simple_type", [
+                                    Token("IDENTIFIER", "String")
+                                ])
+                            ])
+                        ])
+                    ])
+                ]),
+                Tree("entity_definition", [
+                    Token("IDENTIFIER", "Entity2"),
+                    Tree("entity_children", [
+                        Tree("property_definition", [
+                            Token("IDENTIFIER", "description"),
+                            Tree("type_definition", [
+                                Tree("simple_type", [
+                                    Token("IDENTIFIER", "String")
+                                ])
+                            ])
+                        ])
+                    ])
+                ]),
+                Tree("relationship_definition", [
+                    Tree("source_entity", [
+                        Token("IDENTIFIER", "Entity1")
+                    ]),
+                    Token("RELATIONSHIP_SYMBOL", "->"),
+                    Tree("target_entity", [
+                        Token("IDENTIFIER", "Entity2")
+                    ])
                 ])
-            ]),
-            Tree("entity_definition", [
-                Token("IDENTIFIER", "Entity2"),
-                Tree("property_definition", [
-                    Token("IDENTIFIER", "description"),
-                    Token("IDENTIFIER", "String")
-                ])
-            ]),
-            Tree("relationship_definition", [
-                Token("IDENTIFIER", "Entity1"),
-                Token("RELATIONSHIP_SYMBOL", "->"),
-                Token("IDENTIFIER", "Entity2")
             ])
         ])
     ])
@@ -94,17 +120,31 @@ def test_transform_service_with_method(transformer):
     tree = Tree("start", [
         Tree("context_definition", [
             Token("IDENTIFIER", "Context"),
-            Tree("service_definition", [
-                Token("IDENTIFIER", "Service"),
-                Tree("method_definition", [
-                    Token("IDENTIFIER", "doSomething"),
-                    Tree("parameter_list", [
-                        Tree("parameter", [
-                            Token("IDENTIFIER", "param"),
-                            Token("IDENTIFIER", "String")
+            Tree("context_children", [
+                Tree("service_definition", [
+                    Token("IDENTIFIER", "Service"),
+                    Tree("service_children", [
+                        Tree("method_definition", [
+                            Token("IDENTIFIER", "doSomething"),
+                            Tree("parameter_list", [
+                                Tree("parameter", [
+                                    Token("IDENTIFIER", "param"),
+                                    Tree("type_definition", [
+                                        Tree("simple_type", [
+                                            Token("IDENTIFIER", "String")
+                                        ])
+                                    ])
+                                ])
+                            ]),
+                            Tree("return_type", [
+                                Tree("type_definition", [
+                                    Tree("simple_type", [
+                                        Token("IDENTIFIER", "Void")
+                                    ])
+                                ])
+                            ])
                         ])
-                    ]),
-                    Token("IDENTIFIER", "Void")
+                    ])
                 ])
             ])
         ])
@@ -125,3 +165,73 @@ def test_transform_service_with_method(transformer):
     assert param.name == "param"
     assert param.type == "String"
     assert method.return_type == "Void"
+
+def test_transform_ui_component(transformer):
+    tree = Tree("start", [
+        Tree("context_definition", [
+            Token("IDENTIFIER", "Context"),
+            Tree("context_children", [
+                Tree("entity_definition", [
+                    Token("IDENTIFIER", "Entity"),
+                    Tree("entity_children", [
+                        Tree("ui_definition", [
+                            Token("UI_COMPONENT", "Form"),
+                            Tree("ui_desc", [
+                                Tree("description", [
+                                    Token("STRING", '"A form for the entity"')
+                                ])
+                            ])
+                        ])
+                    ])
+                ])
+            ])
+        ])
+    ])
+    model = transformer.transform(tree)
+    assert isinstance(model, DomainModel)
+    assert len(model.bounded_contexts) == 1
+    context = model.bounded_contexts[0]
+    assert context.name == "Context"
+    assert len(context.entities) == 1
+    entity = context.entities[0]
+    assert entity.name == "Entity"
+    assert len(entity.uis) == 1
+    ui = entity.uis[0]
+    assert ui.component_type == "Form"
+    assert ui.description == "A form for the entity"
+
+def test_transform_api_definition(transformer):
+    tree = Tree("start", [
+        Tree("context_definition", [
+            Token("IDENTIFIER", "Context"),
+            Tree("context_children", [
+                Tree("entity_definition", [
+                    Token("IDENTIFIER", "Entity"),
+                    Tree("entity_children", [
+                        Tree("api_definition", [
+                            Token("HTTP_METHOD", "GET"),
+                            Token("STRING", '"/entities"'),
+                            Tree("api_desc", [
+                                Tree("description", [
+                                    Token("STRING", '"Get all entities"')
+                                ])
+                            ])
+                        ])
+                    ])
+                ])
+            ])
+        ])
+    ])
+    model = transformer.transform(tree)
+    assert isinstance(model, DomainModel)
+    assert len(model.bounded_contexts) == 1
+    context = model.bounded_contexts[0]
+    assert context.name == "Context"
+    assert len(context.entities) == 1
+    entity = context.entities[0]
+    assert entity.name == "Entity"
+    assert len(entity.apis) == 1
+    api = entity.apis[0]
+    assert api.http_method == "GET"
+    assert api.path == "/entities"
+    assert api.description == "Get all entities"

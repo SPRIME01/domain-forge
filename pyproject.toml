@@ -1,6 +1,6 @@
 [build-system]
-requires = ["uv"]
-build-backend = "uv.build"
+requires = ["setuptools>=42.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "domainforge"
@@ -33,6 +33,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "pytest-mock>=3.0.0",
+    "pytest-bdd>=4.0.0",
     "ruff>=0.1.0",
 ]
 
@@ -40,7 +43,8 @@ dev = [
 domainforge = "domainforge.cli:main"
 
 [tool.setuptools]
-packages = ["domainforge"]
+package-dir = {"" = "src"}
+py-modules = ["domainforge"]
 
 [tool.ruff]
 line-length = 88

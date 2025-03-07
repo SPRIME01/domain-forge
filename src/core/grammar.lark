@@ -1,185 +1,82 @@
-%import common.WS
-%import common.INT
-%import common.FLOAT
-%import common.WORD
-%import common.ESCAPED_STRING
-%ignore WS
+// DomainForge Grammar
 
-// --------------------- Terminals ---------------------
+start: context_definition+
 
-// MODIFIERS: Modify relationships to indicate obligations or permissions.
-MODIFIER: "!"    // Must (Obligation)
-        | "~"   // Should (Recommendation)
-        | "?"   // May (Permission)
+context_definition: "@" IDENTIFIER "{" context_children "}"
+context_children: (entity_definition | value_object_definition | event_definition | service_definition | repository_definition | module_definition | role_definition | relationship_definition)*
 
-// ENTITY SYMBOLS: Indicate the type of an entity.
-ENTITY_SYMBOL: "#"    // Entity (aggregate root)
-             | "%"    // Value object
-             | "^"    // Event
-             | ">>"   // Service/Process
-             | "&"    // Role/Actor
-             | "@"    // Context/Bounded Context
-             | "$"    // Repository
-             | "*"    // Module/Package
+entity_definition: "#" IDENTIFIER entity_inheritance? "{" entity_children "}"
+entity_inheritance: ":" IDENTIFIER
+entity_children: (property_definition | method_definition | api_definition | ui_definition)*
 
-// RELATIONSHIP SYMBOLS: Represent various relationship types.
-RELATIONSHIP_SYMBOL: "=>"      // Dependency / Uses
-                   | "<->"      // Bidirectional Association
-                   | "--"       // Association
-                   | "->"       // One-way Association
-                   | "."        // Composition
-                   | "::"       // Inheritance
-                   | "/"        // Implementation
-                   | "="        // Equivalence
+value_object_definition: "%" IDENTIFIER "{" property_definition* "}"
+event_definition: "^" IDENTIFIER "{" property_definition* "}"
+service_definition: ">>" IDENTIFIER "{" service_children "}"
+service_children: (method_definition | api_definition)*
+repository_definition: "$" IDENTIFIER "{" method_definition* "}"
+module_definition: "*" IDENTIFIER "{" module_children "}"
+module_children: (entity_definition | value_object_definition | event_definition | service_definition | repository_definition)*
+role_definition: "&" IDENTIFIER "{" property_definition* "}"
 
-// API and UI annotations
+property_definition: IDENTIFIER ":" type_definition property_default? property_constraint?
+property_default: "=" default_value
+property_constraint: "[" constraint+ "]"
+
+type_definition: simple_type | generic_type | list_type | dict_type
+simple_type: IDENTIFIER
+generic_type: IDENTIFIER "<" IDENTIFIER ">"
+list_type: "List" "<" type_definition ">"
+dict_type: "Dict" "<" type_definition ":" type_definition ">"
+
+method_definition: visibility? IDENTIFIER "(" parameter_list? ")" return_type? method_body?
+visibility: VISIBILITY
+return_type: ":" type_definition
+method_body: "{" description? "}"
+
+parameter_list: parameter ("," parameter)*
+parameter: IDENTIFIER ":" type_definition parameter_default?
+parameter_default: "=" default_value
+
+default_value: INT | FLOAT | STRING | IDENTIFIER | list_value
+list_value: "[" value_list? "]"
+value_list: value ("," value)*
+value: INT | FLOAT | STRING | IDENTIFIER | list_value
+
+constraint: "required" | "unique" | min_constraint | max_constraint | pattern_constraint | fk_constraint
+min_constraint: "min" ":" INT
+max_constraint: "max" ":" INT
+pattern_constraint: "pattern" ":" STRING
+fk_constraint: "foreign_key" ":" IDENTIFIER
+
+relationship_definition: source_entity RELATIONSHIP_SYMBOL target_entity relationship_desc?
+relationship_desc: "{" description? "}"
+source_entity: IDENTIFIER
+target_entity: IDENTIFIER
+
+description: STRING
+
+api_definition: "api" ":" HTTP_METHOD STRING api_params? api_return? api_desc?
+api_params: "(" parameter_list? ")"
+api_return: ":" type_definition
+api_desc: "{" description? "}"
+
+ui_definition: "ui" ":" UI_COMPONENT ui_params? ui_desc?
+ui_params: "(" parameter_list? ")"
+ui_desc: "{" description? "}"
+
+// Terminals
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+RELATIONSHIP_SYMBOL: "=>" | "<->" | "--" | "->" | "." | "::" | "/" | "="
 HTTP_METHOD: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
 UI_COMPONENT: "Form" | "Table" | "Card" | "Detail" | "List"
 VISIBILITY: "public" | "private" | "protected"
 
-// Symbols used for grouping expressions
-LPAREN: "("
-RPAREN: ")"
-LSQBRACKET: "["
-RSQBRACKET: "]"
-LCURLYBRACE: "{"
-RCURLYBRACE: "}"
-LANGLED: "<"
-RANGLED: ">"
+STRING: /"[^"]*"/
 
-// Other separators
-ITEM_SEPARATOR: ","           // Separator in groups and collections
-COLON: ":"
-EQUALS: "="
+%import common.INT
+%import common.FLOAT
+%import common.WS
 
-// Comments
-COMMENT: /\/\/[^\n]*/         // Single-line comments
-       | /\/\*[\s\S]*?\*\//    // Multi-line comments
+COMMENT: /\/\/[^\n]*/ | /\/\*[\s\S]*?\*\//
 %ignore COMMENT
-
-// IDENTIFIERS: Names for entities.
-IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
-
-// String literals
-STRING: ESCAPED_STRING
-
-// --------------------- Grammar Rules ---------------------
-
-// A complete domain model consists of one or more bounded contexts
-start: context_definition+
-
-// A bounded context defines a subsystem boundary
-context_definition: "@" IDENTIFIER LCURLYBRACE
-                     (entity_definition
-                     | value_object_definition
-                     | event_definition
-                     | service_definition
-                     | repository_definition
-                     | module_definition
-                     | role_definition)*
-                   RCURLYBRACE
-
-// Entity - aggregate root
-entity_definition: "#" IDENTIFIER (COLON IDENTIFIER)? LCURLYBRACE
-                    (property_definition
-                    | method_definition
-                    | api_definition
-                    | ui_definition)*
-                  RCURLYBRACE
-
-// Value Object - immutable with no identity
-value_object_definition: "%" IDENTIFIER LCURLYBRACE
-                          property_definition*
-                        RCURLYBRACE
-
-// Event definition
-event_definition: "^" IDENTIFIER LCURLYBRACE
-                   property_definition*
-                 RCURLYBRACE
-
-// Service definition
-service_definition: ">>" IDENTIFIER LCURLYBRACE
-                     (method_definition | api_definition)*
-                   RCURLYBRACE
-
-// Repository definition
-repository_definition: "$" IDENTIFIER LCURLYBRACE
-                        method_definition*
-                      RCURLYBRACE
-
-// Module definition
-module_definition: "*" IDENTIFIER LCURLYBRACE
-                    (entity_definition
-                    | value_object_definition
-                    | event_definition
-                    | service_definition
-                    | repository_definition)*
-                  RCURLYBRACE
-
-// Role definition
-role_definition: "&" IDENTIFIER LCURLYBRACE
-                  property_definition*
-                RCURLYBRACE
-
-// Property definition
-property_definition: IDENTIFIER COLON type_definition (EQUALS default_value)?
-                    (LSQBRACKET constraint+ RSQBRACKET)?
-
-// Type definition including collections
-type_definition: IDENTIFIER              -> simple_type
-               | IDENTIFIER LANGLED IDENTIFIER RANGLED  -> generic_type
-               | "List" LANGLED type_definition RANGLED -> list_type
-               | "Dict" LANGLED type_definition COLON type_definition RANGLED -> dict_type
-
-// Method definition
-method_definition: (VISIBILITY)? IDENTIFIER LPAREN parameter_list? RPAREN (COLON type_definition)?
-                    (LCURLYBRACE description? RCURLYBRACE)?
-
-// Parameter list
-parameter_list: parameter (ITEM_SEPARATOR parameter)*
-
-// Parameter
-parameter: IDENTIFIER COLON type_definition (EQUALS default_value)?
-
-// Default value
-default_value: INT
-             | FLOAT
-             | STRING
-             | IDENTIFIER
-             | LSQBRACKET value_list? RSQBRACKET
-
-// Value list
-value_list: value (ITEM_SEPARATOR value)*
-
-// Value
-value: INT
-     | FLOAT
-     | STRING
-     | IDENTIFIER
-     | LSQBRACKET value_list? RSQBRACKET
-
-// Constraint
-constraint: "required"
-          | "unique"
-          | "min" COLON INT
-          | "max" COLON INT
-          | "pattern" COLON STRING
-          | "foreign_key" COLON IDENTIFIER
-
-// Relationship definition
-relationship_definition: source_entity RELATIONSHIP_SYMBOL target_entity (LCURLYBRACE description RCURLYBRACE)?
-
-// Source and target entities
-source_entity: IDENTIFIER
-target_entity: IDENTIFIER
-
-// Description
-description: STRING
-
-// API definition
-api_definition: "api" COLON HTTP_METHOD STRING (LPAREN parameter_list? RPAREN)?
-                (COLON type_definition)? (LCURLYBRACE description? RCURLYBRACE)?
-
-// UI definition
-ui_definition: "ui" COLON UI_COMPONENT (LPAREN parameter_list? RPAREN)?
-               (LCURLYBRACE description? RCURLYBRACE)?
+%ignore WS
