@@ -4,6 +4,7 @@ Database configuration and session management.
 This module provides the database configuration and session management utilities.
 """
 
+from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
 
@@ -24,16 +25,17 @@ async def init_database(engine: AsyncEngine) -> None:
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def get_session(engine: AsyncEngine) -> AsyncSession:
+async def get_session(request: Request) -> AsyncSession:
     """
     Get a database session.
 
     Args:
-        engine: The SQLAlchemy engine to use
+        request: The FastAPI request object
 
     Returns:
         An async database session
     """
+    engine = request.app.state.engine
     async_session = async_sessionmaker(
         engine,
         class_=AsyncSession,
