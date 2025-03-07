@@ -42,7 +42,10 @@ class EntityService:
         return await self.repository.add(entity.to_dict())
 
     async def get_entity(self, entity_id: str) -> dict:
-        return await self.repository.get(entity_id)
+        result = await self.repository.get(entity_id)
+        if result is None:
+            raise ValueError(f"Entity {entity_id} not found")
+        return result
 
     async def update_entity(self, entity_id: str, data: dict) -> None:
         current = await self.repository.get(entity_id)
@@ -60,8 +63,10 @@ class EntityService:
         return await self.repository.list()
 
 
+from typing import Generator
+
 @pytest.fixture
-def repo_file() -> str:
+def repo_file() -> Generator[str, None, None]:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp:
         temp_path = temp.name
     yield temp_path

@@ -8,7 +8,7 @@ import pytest
 import os
 import json
 import tempfile
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Generator, Optional
 from pathlib import Path
 
 
@@ -80,7 +80,7 @@ class TestJsonFileRepository:
     """Tests for the JsonFileRepository."""
 
     @pytest.fixture
-    def repo_file(self) -> str:
+    def repo_file(self) -> Generator[str, Any, None]:
         """Create a temporary file for the repository."""
         with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp:
             temp_path = temp.name
