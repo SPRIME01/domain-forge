@@ -1,6 +1,7 @@
 """
 Integration tests combining repository, service, and domain behavior.
 """
+
 import os
 import tempfile
 import pytest
@@ -11,6 +12,8 @@ import uuid
 
 # Import the repository implementation from the infrastructure tests
 from tests.infrastructure.test_repository import JsonFileRepository
+from typing import Generator, Optional  # added Optional import
+
 
 # Define a simple domain entity
 @dataclass
@@ -26,7 +29,7 @@ class Entity:
 
     def to_dict(self) -> dict:
         data = asdict(self)
-        data['created_at'] = data['created_at'].isoformat()
+        data["created_at"] = data["created_at"].isoformat()
         return data
 
 
@@ -41,10 +44,9 @@ class EntityService:
             raise ValueError("Invalid entity data")
         return await self.repository.add(entity.to_dict())
 
-    async def get_entity(self, entity_id: str) -> dict:
+    async def get_entity(self, entity_id: str) -> Optional[dict]:
         result = await self.repository.get(entity_id)
-        if result is None:
-            raise ValueError(f"Entity {entity_id} not found")
+        # Return None if entity not found instead of raising an error
         return result
 
     async def update_entity(self, entity_id: str, data: dict) -> None:
@@ -63,11 +65,9 @@ class EntityService:
         return await self.repository.list()
 
 
-from typing import Generator
-
 @pytest.fixture
 def repo_file() -> Generator[str, None, None]:
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp:
         temp_path = temp.name
     yield temp_path
     if os.path.exists(temp_path):
@@ -88,7 +88,7 @@ async def test_full_entity_flow(repository):
         "id": "integration-1",
         "name": "Integration Test Entity",
         "description": "Full flow test",
-        "version": 1
+        "version": 1,
     }
     entity_id = await service.create_entity(entity_data)
     assert entity_id == "integration-1"
@@ -101,6 +101,7 @@ async def test_full_entity_flow(repository):
     # Update entity
     await service.update_entity(entity_id, {"name": "Updated Name"})
     updated = await service.get_entity(entity_id)
+    assert updated is not None
     assert updated["name"] == "Updated Name"
     assert updated["version"] == 2
 
