@@ -43,25 +43,49 @@ dev = [
     "pytest-mock>=3.0.0",
     "pytest-bdd>=4.0.0",
     "ruff>=0.1.0",
+    "mypy>=0.910.0",
+    "pre-commit>=2.15.0"
 ]
 
 [project.scripts]
 domainforge = "domainforge.cli:main"
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = {"" = "domainforge"}
 py-modules = ["domainforge"]
 
 [tool.ruff]
 line-length = 88
 target-version = "py38"
-select = ["E", "F", "I", "N", "W", "B", "UP", "C"]
+
+[tool.ruff.lint]
 ignore = []
+select = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["domainforge"]
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
 
-[tool.ruff.isort]
-known-first-party = ["domainforge"]
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+strict_optional = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "session"

@@ -1,20 +1,25 @@
+from pathlib import Path
 import pytest
-from src.core.interpreter import DomainForgeInterpreter
-from src.core.models import DomainModel
+from typing import Any
+
+from domainforge.core.interpreter import DomainForgeInterpreter
+from domainforge.core.models import DomainModel
+
 
 @pytest.fixture
-def interpreter():
+def interpreter() -> DomainForgeInterpreter:
     return DomainForgeInterpreter()
 
-def test_interpret_simple_entity(interpreter):
-    dsl = """
+
+def test_interpret_simple_entity(interpreter: DomainForgeInterpreter) -> None:
+    dsl: str = """
     @Context {
         #Entity {
             name: String
         }
     }
     """
-    model = interpreter.interpret(dsl)
+    model: DomainModel = interpreter.interpret(dsl)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
     context = model.bounded_contexts[0]
@@ -27,8 +32,9 @@ def test_interpret_simple_entity(interpreter):
     assert prop.name == "name"
     assert prop.type == "String"
 
-def test_interpret_relationship(interpreter):
-    dsl = """
+
+def test_interpret_relationship(interpreter: DomainForgeInterpreter) -> None:
+    dsl: str = """
     @Context {
         #Entity1 {
             name: String
@@ -39,7 +45,7 @@ def test_interpret_relationship(interpreter):
         Entity1 -> Entity2
     }
     """
-    model = interpreter.interpret(dsl)
+    model: DomainModel = interpreter.interpret(dsl)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
     context = model.bounded_contexts[0]
@@ -55,15 +61,16 @@ def test_interpret_relationship(interpreter):
     assert relationship.target_entity == "Entity2"
     assert relationship.relationship_type == "->"
 
-def test_interpret_service_with_method(interpreter):
-    dsl = """
+
+def test_interpret_service_with_method(interpreter: DomainForgeInterpreter) -> None:
+    dsl: str = """
     @Context {
         >>Service {
             doSomething(param: String): Void
         }
     }
     """
-    model = interpreter.interpret(dsl)
+    model: DomainModel = interpreter.interpret(dsl)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
     context = model.bounded_contexts[0]
@@ -80,17 +87,18 @@ def test_interpret_service_with_method(interpreter):
     assert param.type == "String"
     assert method.return_type == "Void"
 
-def test_interpret_file(interpreter, tmp_path):
-    dsl = """
+
+def test_interpret_file(interpreter: DomainForgeInterpreter, tmp_path: Path) -> None:
+    dsl: str = """
     @Context {
         #Entity {
             name: String
         }
     }
     """
-    file_path = tmp_path / "test.domainforge"
+    file_path: Path = tmp_path / "test.domainforge"
     file_path.write_text(dsl)
-    model = interpreter.interpret_file(file_path)
+    model: DomainModel = interpreter.interpret_file(file_path)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
     context = model.bounded_contexts[0]
@@ -103,19 +111,20 @@ def test_interpret_file(interpreter, tmp_path):
     assert prop.name == "name"
     assert prop.type == "String"
 
-def test_export_model(interpreter, tmp_path):
-    dsl = """
+
+def test_export_model(interpreter: DomainForgeInterpreter, tmp_path: Path) -> None:
+    dsl: str = """
     @Context {
         #Entity {
             name: String
         }
     }
     """
-    model = interpreter.interpret(dsl)
-    output_path = tmp_path / "domain_model.json"
+    model: DomainModel = interpreter.interpret(dsl)
+    output_path: Path = tmp_path / "domain_model.json"
     interpreter.export_model(model, output_path)
     assert output_path.exists()
-    exported_data = output_path.read_text()
+    exported_data: str = output_path.read_text()
     assert '"name": "Context"' in exported_data
     assert '"name": "Entity"' in exported_data
     assert '"name": "name"' in exported_data

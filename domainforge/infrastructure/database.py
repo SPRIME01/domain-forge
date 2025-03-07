@@ -5,9 +5,8 @@ This module provides the database configuration and session management utilities
 """
 
 from fastapi import Request
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-
 
 # Create the declarative base class
 Base = declarative_base()
@@ -37,9 +36,7 @@ async def get_session(request: Request) -> AsyncSession:
     """
     engine = request.app.state.engine
     async_session = async_sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False
+        engine, class_=AsyncSession, expire_on_commit=False
     )
     async with async_session() as session:
         yield session

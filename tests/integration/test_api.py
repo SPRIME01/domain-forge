@@ -1,14 +1,17 @@
 """API integration tests."""
+
+from typing import AsyncGenerator, Any
+
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-# Import directly from src module
-from src.infrastructure.app import app
-from src.infrastructure.database import get_session, Base
-from src.api.models import Entity
-from src.config.settings import get_settings
+from domainforge.config.settings import get_settings
+
+# Import directly from domainforge module
+from domainforge.infrastructure.app import app
+from domainforge.infrastructure.database import Base, get_session
 
 # Create a test client
 client = TestClient(app)
@@ -19,7 +22,7 @@ settings = get_settings()
 test_engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=True)
 
 @pytest_asyncio.fixture(autouse=True)
-async def setup_test_database():
+async def setup_test_database() -> AsyncGenerator[None, None]:
     """Setup test database."""
     # Create tables
     async with test_engine.begin() as conn:
@@ -27,17 +30,17 @@ async def setup_test_database():
         await conn.run_sync(Base.metadata.create_all)
 
     # Create a test session factory
-    TestSessionLocal = async_sessionmaker(
+    test_session_local = async_sessionmaker(
         bind=test_engine,
         class_=AsyncSession,
         expire_on_commit=False,
         autocommit=False,
-        autoflush=False
+        autoflush=False,
     )
 
     # Override the session dependency
-    async def override_get_session():
-        async with TestSessionLocal() as session:
+    async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
+        async with test_session_local() as session:
             yield session
 
     app.dependency_overrides[get_session] = override_get_session
@@ -53,13 +56,15 @@ async def setup_test_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 @pytest.mark.asyncio
-async def test_create_entity():
+async def test_create_entity() -> None:
+    """Test creating an entity via API."""
     response = client.post("/api/entities", json={"name": "Test Entity"})
     assert response.status_code == 201
     assert response.json()["name"] == "Test Entity"
 
 @pytest.mark.asyncio
-async def test_get_entity():
+async def test_get_entity() -> None:
+    """Test retrieving an entity via API."""
     # Create an entity first
     create_response = client.post("/api/entities", json={"name": "Test Entity"})
     entity_id = create_response.json()["id"]
@@ -70,7 +75,8 @@ async def test_get_entity():
     assert response.json()["name"] == "Test Entity"
 
 @pytest.mark.asyncio
-async def test_update_entity():
+async def test_update_entity() -> None:
+    """Test updating an entity via API."""
     # Create an entity first
     create_response = client.post("/api/entities", json={"name": "Test Entity"})
     entity_id = create_response.json()["id"]
@@ -81,7 +87,8 @@ async def test_update_entity():
     assert response.json()["name"] == "Updated Entity"
 
 @pytest.mark.asyncio
-async def test_delete_entity():
+async def test_delete_entity() -> None:
+    """Test deleting an entity via API."""
     # Create an entity first
     create_response = client.post("/api/entities", json={"name": "Test Entity"})
     entity_id = create_response.json()["id"]

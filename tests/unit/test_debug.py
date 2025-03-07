@@ -1,22 +1,23 @@
-import pytest
-from lark import Lark, Tree, Token
 import json
-from src.core.transformer import DomainForgeTransformer
+from typing import Any, Dict, List, Union
 
-def tree_to_dict(node):
+import pytest
+from lark import Lark, Token, Tree
+
+from domainforge.core.transformer import DomainForgeTransformer
+
+
+def tree_to_dict(node: Union[Tree, Token]) -> Dict[str, Any]:
     """Convert a Lark tree to a dictionary for easier inspection"""
     if isinstance(node, Tree):
         return {
             "type": "Tree",
             "data": node.data,
-            "children": [tree_to_dict(child) for child in node.children]
+            "children": [tree_to_dict(child) for child in node.children],
         }
     else:  # Token
-        return {
-            "type": "Token",
-            "token_type": node.type,
-            "value": node.value
-        }
+        return {"type": "Token", "token_type": node.type, "value": node.value}
+
 
 def test_debug_parse_tree():
     # Define the grammar using Lark's EBNF syntax - with explicit tree structure
@@ -40,6 +41,7 @@ def test_debug_parse_tree():
     role_definition: "&" IDENTIFIER "{" property_definition* "}"
 
     property_definition: IDENTIFIER ":" type_definition property_default? property_constraint?
+
     property_default: "=" default_value
     property_constraint: "[" constraint+ "]"
 
@@ -103,7 +105,7 @@ def test_debug_parse_tree():
     %ignore WS
     """
 
-    parser = Lark(grammar, parser='lalr')
+    parser = Lark(grammar, parser="lalr")
 
     dsl = """
     @Context {
@@ -115,28 +117,31 @@ def test_debug_parse_tree():
     tree = parser.parse(dsl)
 
     # Convert tree to a dictionary and display it as JSON
-    tree_dict = tree_to_dict(tree)
-    tree_json = json.dumps(tree_dict, indent=2)
+    tree_dict: Dict[str, Any] = tree_to_dict(tree)
+    tree_json: str = json.dumps(tree_dict, indent=2)
 
     # Use pytest.fail to display the output
     pytest.fail(f"Parse Tree Structure:\n{tree_json}")
 
+
 def test_debug_property_definition():
     """Debug test for property_definition transformer method."""
-    transformer = DomainForgeTransformer()
+    transformer: DomainForgeTransformer = DomainForgeTransformer()
 
     # Create a simple property definition tree
-    property_tree = Tree("property_definition", [
-        Token("IDENTIFIER", "name"),
-        Tree("type_definition", [
-            Tree("simple_type", [
-                Token("IDENTIFIER", "String")
-            ])
-        ])
-    ])
+    property_tree: Tree = Tree(
+        "property_definition",
+        [
+            Token("IDENTIFIER", "name"),
+            Tree(
+                "type_definition",
+                [Tree("simple_type", [Token("IDENTIFIER", "String")])],
+            ),
+        ],
+    )
 
     # Directly transform the property definition
-    result = transformer.property_definition(property_tree.children)
+    result: Any = transformer.property_definition(property_tree.children)
 
     # Debug output
     print(f"\nDEBUG: Property transformation result = {result}")
@@ -145,3 +150,4 @@ def test_debug_property_definition():
     # Test assertions
     assert result.name == "name"
     assert result.type == "String"
+

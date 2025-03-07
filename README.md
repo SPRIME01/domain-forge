@@ -123,12 +123,14 @@ The DomainForge DSL allows you to define your domain model in a clear, structure
 DomainForge follows a clean architecture approach, generating code with the following layers:
 
 ### Backend (Python FastAPI)
+
 - **Domain Layer**: Core entities, value objects, and repository interfaces
 - **Application Layer**: Use cases, DTOs, and application services
 - **Infrastructure Layer**: Database implementations, external services
 - **API Layer**: Controllers, routes, and request/response models
 
 ### Frontend (TypeScript React)
+
 - **Domain Layer**: Core entities and value objects
 - **Application Layer**: Use cases and application services
 - **Infrastructure Layer**: API clients and state management

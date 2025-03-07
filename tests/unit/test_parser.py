@@ -1,8 +1,9 @@
 import pytest
-from lark import Lark, Tree, Token
+from lark import Lark, Token, Tree
+
 
 @pytest.fixture
-def parser():
+def parser() -> Lark:
     # Define the grammar using Lark's EBNF syntax - with explicit tree structure
     grammar = r"""
     start: context_definition+
@@ -87,9 +88,10 @@ def parser():
     %ignore WS
     """
 
-    return Lark(grammar, parser='lalr')
+    return Lark(grammar, parser="lalr")
 
-def test_parse_simple_entity(parser):
+
+def test_parse_simple_entity(parser) -> None:
     dsl = """
     @Context {
         #Entity {
@@ -127,7 +129,8 @@ def test_parse_simple_entity(parser):
     assert simple_type.data == "simple_type"
     assert simple_type.children[0] == Token("IDENTIFIER", "String")
 
-def test_parse_relationship(parser):
+
+def test_parse_relationship(parser) -> None:
     dsl = """
     @Context {
         #Entity1 {
@@ -172,7 +175,8 @@ def test_parse_relationship(parser):
     assert target.data == "target_entity"
     assert target.children[0] == Token("IDENTIFIER", "Entity2")
 
-def test_parse_service_with_method(parser):
+
+def test_parse_service_with_method(parser) -> None:
     dsl = """
     @Context {
         >>Service {
@@ -226,7 +230,8 @@ def test_parse_service_with_method(parser):
     assert return_simple_type.data == "simple_type"
     assert return_simple_type.children[0] == Token("IDENTIFIER", "Void")
 
-def test_parse_ui_component(parser):
+
+def test_parse_ui_component(parser) -> None:
     dsl = """
     @Context {
         #Entity {
@@ -265,7 +270,8 @@ def test_parse_ui_component(parser):
     assert description.data == "description"
     assert description.children[0] == Token("STRING", '"A form for the entity"')
 
-def test_parse_api_definition(parser):
+
+def test_parse_api_definition(parser) -> None:
     dsl = """
     @Context {
         #Entity {

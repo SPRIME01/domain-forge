@@ -1,49 +1,65 @@
 import pytest
-from lark import Tree, Token
-from src.core.transformer import DomainForgeTransformer
-from src.core.models import (
+from lark import Token, Tree
+
+from domainforge.core.models import (
     DomainModel,
-    BoundedContext,
-    Entity,
-    ValueObject,
-    Event,
-    Service,
-    Repository,
-    Role,
-    Module,
-    Property,
-    Method,
-    ApiEndpoint,
-    UiComponent,
-    Relationship,
-    Parameter,
 )
+from domainforge.core.transformer import DomainForgeTransformer
+
 
 @pytest.fixture
 def transformer():
     return DomainForgeTransformer()
 
+
 def test_transform_simple_entity(transformer):
-    tree = Tree("start", [
-        Tree("context_definition", [
-            Token("IDENTIFIER", "Context"),
-            Tree("context_children", [
-                Tree("entity_definition", [
-                    Token("IDENTIFIER", "Entity"),
-                    Tree("entity_children", [
-                        Tree("property_definition", [
-                            Token("IDENTIFIER", "name"),
-                            Tree("type_definition", [
-                                Tree("simple_type", [
-                                    Token("IDENTIFIER", "String")
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
+    tree = Tree(
+        "start",
+        [
+            Tree(
+                "context_definition",
+                [
+                    Token("IDENTIFIER", "Context"),
+                    Tree(
+                        "context_children",
+                        [
+                            Tree(
+                                "entity_definition",
+                                [
+                                    Token("IDENTIFIER", "Entity"),
+                                    Tree(
+                                        "entity_children",
+                                        [
+                                            Tree(
+                                                "property_definition",
+                                                [
+                                                    Token("IDENTIFIER", "name"),
+                                                    Tree(
+                                                        "type_definition",
+                                                        [
+                                                            Tree(
+                                                                "simple_type",
+                                                                [
+                                                                    Token(
+                                                                        "IDENTIFIER",
+                                                                        "String",
+                                                                    )
+                                                                ],
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
+                                            )
+                                        ],
+                                    ),
+                                ],
+                            )
+                        ],
+                    ),
+                ],
+            )
+        ],
+    )
     model = transformer.transform(tree)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
@@ -57,49 +73,100 @@ def test_transform_simple_entity(transformer):
     assert prop.name == "name"
     assert prop.type == "String"
 
+
 def test_transform_relationship(transformer):
-    tree = Tree("start", [
-        Tree("context_definition", [
-            Token("IDENTIFIER", "Context"),
-            Tree("context_children", [
-                Tree("entity_definition", [
-                    Token("IDENTIFIER", "Entity1"),
-                    Tree("entity_children", [
-                        Tree("property_definition", [
-                            Token("IDENTIFIER", "name"),
-                            Tree("type_definition", [
-                                Tree("simple_type", [
-                                    Token("IDENTIFIER", "String")
-                                ])
-                            ])
-                        ])
-                    ])
-                ]),
-                Tree("entity_definition", [
-                    Token("IDENTIFIER", "Entity2"),
-                    Tree("entity_children", [
-                        Tree("property_definition", [
-                            Token("IDENTIFIER", "description"),
-                            Tree("type_definition", [
-                                Tree("simple_type", [
-                                    Token("IDENTIFIER", "String")
-                                ])
-                            ])
-                        ])
-                    ])
-                ]),
-                Tree("relationship_definition", [
-                    Tree("source_entity", [
-                        Token("IDENTIFIER", "Entity1")
-                    ]),
-                    Token("RELATIONSHIP_SYMBOL", "->"),
-                    Tree("target_entity", [
-                        Token("IDENTIFIER", "Entity2")
-                    ])
-                ])
-            ])
-        ])
-    ])
+    tree = Tree(
+        "start",
+        [
+            Tree(
+                "context_definition",
+                [
+                    Token("IDENTIFIER", "Context"),
+                    Tree(
+                        "context_children",
+                        [
+                            Tree(
+                                "entity_definition",
+                                [
+                                    Token("IDENTIFIER", "Entity1"),
+                                    Tree(
+                                        "entity_children",
+                                        [
+                                            Tree(
+                                                "property_definition",
+                                                [
+                                                    Token("IDENTIFIER", "name"),
+                                                    Tree(
+                                                        "type_definition",
+                                                        [
+                                                            Tree(
+                                                                "simple_type",
+                                                                [
+                                                                    Token(
+                                                                        "IDENTIFIER",
+                                                                        "String",
+                                                                    )
+                                                                ],
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
+                                            )
+                                        ],
+                                    ),
+                                ],
+                            ),
+                            Tree(
+                                "entity_definition",
+                                [
+                                    Token("IDENTIFIER", "Entity2"),
+                                    Tree(
+                                        "entity_children",
+                                        [
+                                            Tree(
+                                                "property_definition",
+                                                [
+                                                    Token("IDENTIFIER", "description"),
+                                                    Tree(
+                                                        "type_definition",
+                                                        [
+                                                            Tree(
+                                                                "simple_type",
+                                                                [
+                                                                    Token(
+                                                                        "IDENTIFIER",
+                                                                        "String",
+                                                                    )
+                                                                ],
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
+                                            )
+                                        ],
+                                    ),
+                                ],
+                            ),
+                            Tree(
+                                "relationship_definition",
+                                [
+                                    Tree(
+                                        "source_entity",
+                                        [Token("IDENTIFIER", "Entity1")],
+                                    ),
+                                    Token("RELATIONSHIP_SYMBOL", "->"),
+                                    Tree(
+                                        "target_entity",
+                                        [Token("IDENTIFIER", "Entity2")],
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                ],
+            )
+        ],
+    )
     model = transformer.transform(tree)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
@@ -116,39 +183,88 @@ def test_transform_relationship(transformer):
     assert relationship.target_entity == "Entity2"
     assert relationship.relationship_type == "->"
 
+
 def test_transform_service_with_method(transformer):
-    tree = Tree("start", [
-        Tree("context_definition", [
-            Token("IDENTIFIER", "Context"),
-            Tree("context_children", [
-                Tree("service_definition", [
-                    Token("IDENTIFIER", "Service"),
-                    Tree("service_children", [
-                        Tree("method_definition", [
-                            Token("IDENTIFIER", "doSomething"),
-                            Tree("parameter_list", [
-                                Tree("parameter", [
-                                    Token("IDENTIFIER", "param"),
-                                    Tree("type_definition", [
-                                        Tree("simple_type", [
-                                            Token("IDENTIFIER", "String")
-                                        ])
-                                    ])
-                                ])
-                            ]),
-                            Tree("return_type", [
-                                Tree("type_definition", [
-                                    Tree("simple_type", [
-                                        Token("IDENTIFIER", "Void")
-                                    ])
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
+    tree = Tree(
+        "start",
+        [
+            Tree(
+                "context_definition",
+                [
+                    Token("IDENTIFIER", "Context"),
+                    Tree(
+                        "context_children",
+                        [
+                            Tree(
+                                "service_definition",
+                                [
+                                    Token("IDENTIFIER", "Service"),
+                                    Tree(
+                                        "service_children",
+                                        [
+                                            Tree(
+                                                "method_definition",
+                                                [
+                                                    Token("IDENTIFIER", "doSomething"),
+                                                    Tree(
+                                                        "parameter_list",
+                                                        [
+                                                            Tree(
+                                                                "parameter",
+                                                                [
+                                                                    Token(
+                                                                        "IDENTIFIER",
+                                                                        "param",
+                                                                    ),
+                                                                    Tree(
+                                                                        "type_definition",
+                                                                        [
+                                                                            Tree(
+                                                                                "simple_type",
+                                                                                [
+                                                                                    Token(
+                                                                                        "IDENTIFIER",
+                                                                                        "String",
+                                                                                    )
+                                                                                ],
+                                                                            )
+                                                                        ],
+                                                                    ),
+                                                                ],
+                                                            )
+                                                        ],
+                                                    ),
+                                                    Tree(
+                                                        "return_type",
+                                                        [
+                                                            Tree(
+                                                                "type_definition",
+                                                                [
+                                                                    Tree(
+                                                                        "simple_type",
+                                                                        [
+                                                                            Token(
+                                                                                "IDENTIFIER",
+                                                                                "Void",
+                                                                            )
+                                                                        ],
+                                                                    )
+                                                                ],
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
+                                            )
+                                        ],
+                                    ),
+                                ],
+                            )
+                        ],
+                    ),
+                ],
+            )
+        ],
+    )
     model = transformer.transform(tree)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
@@ -166,27 +282,55 @@ def test_transform_service_with_method(transformer):
     assert param.type == "String"
     assert method.return_type == "Void"
 
+
 def test_transform_ui_component(transformer):
-    tree = Tree("start", [
-        Tree("context_definition", [
-            Token("IDENTIFIER", "Context"),
-            Tree("context_children", [
-                Tree("entity_definition", [
-                    Token("IDENTIFIER", "Entity"),
-                    Tree("entity_children", [
-                        Tree("ui_definition", [
-                            Token("UI_COMPONENT", "Form"),
-                            Tree("ui_desc", [
-                                Tree("description", [
-                                    Token("STRING", '"A form for the entity"')
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
+    tree = Tree(
+        "start",
+        [
+            Tree(
+                "context_definition",
+                [
+                    Token("IDENTIFIER", "Context"),
+                    Tree(
+                        "context_children",
+                        [
+                            Tree(
+                                "entity_definition",
+                                [
+                                    Token("IDENTIFIER", "Entity"),
+                                    Tree(
+                                        "entity_children",
+                                        [
+                                            Tree(
+                                                "ui_definition",
+                                                [
+                                                    Token("UI_COMPONENT", "Form"),
+                                                    Tree(
+                                                        "ui_desc",
+                                                        [
+                                                            Tree(
+                                                                "description",
+                                                                [
+                                                                    Token(
+                                                                        "STRING",
+                                                                        '"A form for the entity"',
+                                                                    )
+                                                                ],
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
+                                            )
+                                        ],
+                                    ),
+                                ],
+                            )
+                        ],
+                    ),
+                ],
+            )
+        ],
+    )
     model = transformer.transform(tree)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1
@@ -200,28 +344,56 @@ def test_transform_ui_component(transformer):
     assert ui.component_type == "Form"
     assert ui.description == "A form for the entity"
 
+
 def test_transform_api_definition(transformer):
-    tree = Tree("start", [
-        Tree("context_definition", [
-            Token("IDENTIFIER", "Context"),
-            Tree("context_children", [
-                Tree("entity_definition", [
-                    Token("IDENTIFIER", "Entity"),
-                    Tree("entity_children", [
-                        Tree("api_definition", [
-                            Token("HTTP_METHOD", "GET"),
-                            Token("STRING", '"/entities"'),
-                            Tree("api_desc", [
-                                Tree("description", [
-                                    Token("STRING", '"Get all entities"')
-                                ])
-                            ])
-                        ])
-                    ])
-                ])
-            ])
-        ])
-    ])
+    tree = Tree(
+        "start",
+        [
+            Tree(
+                "context_definition",
+                [
+                    Token("IDENTIFIER", "Context"),
+                    Tree(
+                        "context_children",
+                        [
+                            Tree(
+                                "entity_definition",
+                                [
+                                    Token("IDENTIFIER", "Entity"),
+                                    Tree(
+                                        "entity_children",
+                                        [
+                                            Tree(
+                                                "api_definition",
+                                                [
+                                                    Token("HTTP_METHOD", "GET"),
+                                                    Token("STRING", '"/entities"'),
+                                                    Tree(
+                                                        "api_desc",
+                                                        [
+                                                            Tree(
+                                                                "description",
+                                                                [
+                                                                    Token(
+                                                                        "STRING",
+                                                                        '"Get all entities"',
+                                                                    )
+                                                                ],
+                                                            )
+                                                        ],
+                                                    ),
+                                                ],
+                                            )
+                                        ],
+                                    ),
+                                ],
+                            )
+                        ],
+                    ),
+                ],
+            )
+        ],
+    )
     model = transformer.transform(tree)
     assert isinstance(model, DomainModel)
     assert len(model.bounded_contexts) == 1

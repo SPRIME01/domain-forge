@@ -5,12 +5,10 @@ This module generates TypeScript/React frontend code from domain models.
 """
 
 import logging
-import shutil
 from pathlib import Path
-from typing import Dict, Any
 
+from ..core.models import BoundedContext, DomainModel
 from .base_generator import BaseGenerator
-from ..core.models import BoundedContext, Entity, Service, ValueObject, DomainModel
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +18,10 @@ class TypeScriptFrontendGenerator(BaseGenerator):
 
     def __init__(self, output_dir: str):
         """Initialize the TypeScript frontend generator."""
-        super().__init__(output_dir, template_dir=str(Path(__file__).parent.parent / "templates" / "typescript"))
+        super().__init__(
+            output_dir,
+            template_dir=str(Path(__file__).parent.parent / "templates" / "typescript"),
+        )
 
         # Create standard directories
         self.src_dir = self.output_dir / "src"
@@ -86,7 +87,7 @@ class TypeScriptFrontendGenerator(BaseGenerator):
             self.render_template(
                 "domain/entity.ts.j2",
                 {"context": context, "entity": entity},
-                entities_dir / f"{entity.name.lower()}.ts"
+                entities_dir / f"{entity.name.lower()}.ts",
             )
 
         # Generate value objects
@@ -94,10 +95,12 @@ class TypeScriptFrontendGenerator(BaseGenerator):
             self.render_template(
                 "domain/value-object.ts.j2",
                 {"context": context, "value_object": vo},
-                value_objects_dir / f"{vo.name.lower()}.ts"
+                value_objects_dir / f"{vo.name.lower()}.ts",
             )
 
-    def _generate_application_layer(self, context: BoundedContext, output_dir: Path) -> None:
+    def _generate_application_layer(
+        self, context: BoundedContext, output_dir: Path
+    ) -> None:
         """Generate application layer code."""
         logger.debug(f"Generating application layer for {context.name}")
 
@@ -115,24 +118,26 @@ class TypeScriptFrontendGenerator(BaseGenerator):
             self.render_template(
                 "application/dto.ts.j2",
                 {"context": context, "entity": entity},
-                dtos_dir / f"{entity.name.lower()}-dto.ts"
+                dtos_dir / f"{entity.name.lower()}-dto.ts",
             )
 
             # Use cases
             self.render_template(
                 "application/use-case.ts.j2",
                 {"context": context, "entity": entity},
-                use_cases_dir / f"{entity.name.lower()}-use-case.ts"
+                use_cases_dir / f"{entity.name.lower()}-use-case.ts",
             )
 
             # Mappers
             self.render_template(
                 "application/mapper.ts.j2",
                 {"context": context, "entity": entity},
-                mappers_dir / f"{entity.name.lower()}-mapper.ts"
+                mappers_dir / f"{entity.name.lower()}-mapper.ts",
             )
 
-    def _generate_infrastructure_layer(self, context: BoundedContext, output_dir: Path) -> None:
+    def _generate_infrastructure_layer(
+        self, context: BoundedContext, output_dir: Path
+    ) -> None:
         """Generate infrastructure layer code."""
         logger.debug(f"Generating infrastructure layer for {context.name}")
 
@@ -150,14 +155,14 @@ class TypeScriptFrontendGenerator(BaseGenerator):
                 self.render_template(
                     "infrastructure/api-client.ts.j2",
                     {"context": context, "entity": entity},
-                    api_dir / f"{entity.name.lower()}-api-client.ts"
+                    api_dir / f"{entity.name.lower()}-api-client.ts",
                 )
 
             # MobX store
             self.render_template(
                 "infrastructure/store.ts.j2",
                 {"context": context, "entity": entity},
-                store_dir / f"{entity.name.lower()}-store.ts"
+                store_dir / f"{entity.name.lower()}-store.ts",
             )
 
     def _generate_ui_layer(self, context: BoundedContext, output_dir: Path) -> None:
@@ -180,58 +185,44 @@ class TypeScriptFrontendGenerator(BaseGenerator):
                     self.render_template(
                         "ui/components/form.tsx.j2",
                         {"context": context, "entity": entity},
-                        components_dir / f"{entity.name.lower()}-form.tsx"
+                        components_dir / f"{entity.name.lower()}-form.tsx",
                     )
                 elif ui.component_type == "Table":
                     self.render_template(
                         "ui/components/table.tsx.j2",
                         {"context": context, "entity": entity},
-                        components_dir / f"{entity.name.lower()}-table.tsx"
+                        components_dir / f"{entity.name.lower()}-table.tsx",
                     )
 
             # Pages
             self.render_template(
                 "ui/pages/list-page.tsx.j2",
                 {"context": context, "entity": entity},
-                pages_dir / f"{entity.name.lower()}-list.tsx"
+                pages_dir / f"{entity.name.lower()}-list.tsx",
             )
             self.render_template(
                 "ui/pages/detail-page.tsx.j2",
                 {"context": context, "entity": entity},
-                pages_dir / f"{entity.name.lower()}-detail.tsx"
+                pages_dir / f"{entity.name.lower()}-detail.tsx",
             )
             self.render_template(
                 "ui/pages/edit-page.tsx.j2",
                 {"context": context, "entity": entity},
-                pages_dir / f"{entity.name.lower()}-edit.tsx"
+                pages_dir / f"{entity.name.lower()}-edit.tsx",
             )
 
     def _generate_common_files(self) -> None:
         """Generate common files for the frontend application."""
         # Generate main app files
-        self.render_template(
-            "app/App.tsx.j2",
-            {},
-            self.src_dir / "App.tsx"
-        )
-        self.render_template(
-            "app/main.tsx.j2",
-            {},
-            self.src_dir / "main.tsx"
-        )
-        self.render_template(
-            "app/vite-env.d.ts.j2",
-            {},
-            self.src_dir / "vite-env.d.ts"
-        )
+        self.render_template("app/App.tsx.j2", {}, self.src_dir / "App.tsx")
+        self.render_template("app/main.tsx.j2", {}, self.src_dir / "main.tsx")
+        self.render_template("app/vite-env.d.ts.j2", {}, self.src_dir / "vite-env.d.ts")
 
         # Generate common utilities
         utils_dir = self.src_dir / "utils"
         utils_dir.mkdir(exist_ok=True)
         self.render_template(
-            "utils/http-client.ts.j2",
-            {},
-            utils_dir / "http-client.ts"
+            "utils/http-client.ts.j2", {}, utils_dir / "http-client.ts"
         )
 
     def _copy_config_files(self) -> None:
@@ -245,7 +236,7 @@ class TypeScriptFrontendGenerator(BaseGenerator):
                 "scripts": {
                     "dev": "vite",
                     "build": "tsc && vite build",
-                    "preview": "vite preview"
+                    "preview": "vite preview",
                 },
                 "dependencies": {
                     "react": "^18.2.0",
@@ -256,15 +247,15 @@ class TypeScriptFrontendGenerator(BaseGenerator):
                     "axios": "^1.6.0",
                     "@mantine/core": "^7.0.0",
                     "@mantine/hooks": "^7.0.0",
-                    "@mantine/form": "^7.0.0"
+                    "@mantine/form": "^7.0.0",
                 },
                 "devDependencies": {
                     "@types/react": "^18.2.0",
                     "@types/react-dom": "^18.2.0",
                     "@vitejs/plugin-react": "^4.2.0",
                     "typescript": "^5.0.0",
-                    "vite": "^5.0.0"
-                }
+                    "vite": "^5.0.0",
+                },
             },
             "tsconfig.json": {
                 "compilerOptions": {
@@ -282,10 +273,10 @@ class TypeScriptFrontendGenerator(BaseGenerator):
                     "strict": True,
                     "noUnusedLocals": True,
                     "noUnusedParameters": True,
-                    "noFallthroughCasesInSwitch": True
+                    "noFallthroughCasesInSwitch": True,
                 },
                 "include": ["src"],
-                "references": [{ "path": "./tsconfig.node.json" }]
+                "references": [{"path": "./tsconfig.node.json"}],
             },
             "vite.config.ts": """
 import { defineConfig } from 'vite'
@@ -294,15 +285,16 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
 })
-"""
+""",
         }
 
         for filename, content in config_files.items():
             file_path = self.output_dir / filename
             if isinstance(content, dict):
                 import json
-                with open(file_path, 'w') as f:
-                    json.dump(content, f, indent=2)
+                json_content = json.dumps(content, indent=2)
+                with open(file_path, "w") as f:
+                    f.write(json_content)
             else:
-                with open(file_path, 'w') as f:
-                    f.write(content)
+                with open(file_path, "w") as f:
+                    f.write(str(content))

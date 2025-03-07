@@ -6,10 +6,9 @@ This module generates Python backend code from domain models using FastAPI and S
 
 import logging
 from pathlib import Path
-from typing import Dict, Any
 
+from ..core.models import BoundedContext
 from .base_generator import BaseGenerator
-from ..core.models import BoundedContext, Entity, Service, ValueObject, DomainModel
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +18,10 @@ class PythonBackendGenerator(BaseGenerator):
 
     def __init__(self, output_dir: str):
         """Initialize the Python backend generator."""
-        super().__init__(output_dir, template_dir=str(Path(__file__).parent.parent / "templates" / "python"))
+        super().__init__(
+            output_dir,
+            template_dir=str(Path(__file__).parent.parent / "templates" / "python"),
+        )
 
         # Create standard directories
         self.src_dir = self.output_dir / "src"
@@ -70,7 +72,12 @@ class PythonBackendGenerator(BaseGenerator):
         value_objects_dir = output_dir / "value_objects"
         services_dir = output_dir / "services"
 
-        for directory in [entities_dir, repositories_dir, value_objects_dir, services_dir]:
+        for directory in [
+            entities_dir,
+            repositories_dir,
+            value_objects_dir,
+            services_dir,
+        ]:
             directory.mkdir(exist_ok=True)
             (directory / "__init__.py").touch()
 
@@ -80,15 +87,15 @@ class PythonBackendGenerator(BaseGenerator):
             self.render_template(
                 "domain/entity.py.j2",
                 {"context": context, "entity": entity},
-                entities_dir / f"{entity.name.lower()}.py"
+                entities_dir / f"{entity.name.lower()}.py",
             )
 
-            # Repository interface
-            if entity.repository:
+            # Repository interface - using getattr for safe attribute access
+            if getattr(entity, 'repository', False):
                 self.render_template(
                     "domain/repository.py.j2",
                     {"context": context, "entity": entity},
-                    repositories_dir / f"{entity.name.lower()}_repository.py"
+                    repositories_dir / f"{entity.name.lower()}_repository.py",
                 )
 
         # Generate value objects
@@ -96,7 +103,7 @@ class PythonBackendGenerator(BaseGenerator):
             self.render_template(
                 "domain/value_object.py.j2",
                 {"context": context, "value_object": vo},
-                value_objects_dir / f"{vo.name.lower()}.py"
+                value_objects_dir / f"{vo.name.lower()}.py",
             )
 
         # Generate domain services
@@ -104,10 +111,12 @@ class PythonBackendGenerator(BaseGenerator):
             self.render_template(
                 "domain/service.py.j2",
                 {"context": context, "service": service},
-                services_dir / f"{service.name.lower()}.py"
+                services_dir / f"{service.name.lower()}.py",
             )
 
-    def _generate_application_layer(self, context: BoundedContext, output_dir: Path) -> None:
+    def _generate_application_layer(
+        self, context: BoundedContext, output_dir: Path
+    ) -> None:
         """Generate application layer code."""
         logger.debug(f"Generating application layer for {context.name}")
 
@@ -125,17 +134,19 @@ class PythonBackendGenerator(BaseGenerator):
             self.render_template(
                 "application/dto.py.j2",
                 {"context": context, "entity": entity},
-                dtos_dir / f"{entity.name.lower()}_dto.py"
+                dtos_dir / f"{entity.name.lower()}_dto.py",
             )
 
             # Use cases
             self.render_template(
                 "application/use_case.py.j2",
                 {"context": context, "entity": entity},
-                use_cases_dir / f"{entity.name.lower()}_use_case.py"
+                use_cases_dir / f"{entity.name.lower()}_use_case.py",
             )
 
-    def _generate_infrastructure_layer(self, context: BoundedContext, output_dir: Path) -> None:
+    def _generate_infrastructure_layer(
+        self, context: BoundedContext, output_dir: Path
+    ) -> None:
         """Generate infrastructure layer code."""
         logger.debug(f"Generating infrastructure layer for {context.name}")
 
@@ -148,7 +159,7 @@ class PythonBackendGenerator(BaseGenerator):
         self.render_template(
             "infrastructure/models.py.j2",
             {"context": context},
-            persistence_dir / "models.py"
+            persistence_dir / "models.py",
         )
 
         # Generate repository implementations
@@ -157,7 +168,7 @@ class PythonBackendGenerator(BaseGenerator):
                 self.render_template(
                     "infrastructure/repository.py.j2",
                     {"context": context, "entity": entity},
-                    persistence_dir / f"{entity.name.lower()}_repository.py"
+                    persistence_dir / f"{entity.name.lower()}_repository.py",
                 )
 
     def _generate_api_layer(self, context: BoundedContext, output_dir: Path) -> None:
@@ -175,7 +186,7 @@ class PythonBackendGenerator(BaseGenerator):
                 self.render_template(
                     "api/controller.py.j2",
                     {"context": context, "entity": entity},
-                    controllers_dir / f"{entity.name.lower()}_controller.py"
+                    controllers_dir / f"{entity.name.lower()}_controller.py",
                 )
 
     def _generate_tests(self, context: BoundedContext) -> None:
@@ -189,8 +200,13 @@ class PythonBackendGenerator(BaseGenerator):
         infrastructure_test_dir = context_test_dir / "infrastructure"
         api_test_dir = context_test_dir / "api"
 
-        for directory in [context_test_dir, domain_test_dir, application_test_dir,
-                         infrastructure_test_dir, api_test_dir]:
+        for directory in [
+            context_test_dir,
+            domain_test_dir,
+            application_test_dir,
+            infrastructure_test_dir,
+            api_test_dir,
+        ]:
             directory.mkdir(parents=True, exist_ok=True)
             (directory / "__init__.py").touch()
 

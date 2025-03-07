@@ -908,6 +908,7 @@ Now that we have the basic structure in place, here are the next steps to comple
 1. **Complete the Transformer Logic**: Enhance the `transformer.py` to properly handle all aspects of the grammar and transform the parse tree into Pydantic models.
 
 2. **Implement Code Generation**: Create Jinja2 templates for generating:
+
    - Python backend (FastAPI, database models, services)
    - TypeScript frontend (React components, state management, API clients)
    - Project configuration files (package.json, pyproject.toml, etc.)

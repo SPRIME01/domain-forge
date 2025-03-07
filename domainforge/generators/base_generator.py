@@ -9,9 +9,10 @@ import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Dict, Optional
-from jinja2 import Environment, FileSystemLoader, Template
 
-from ..core.models import BoundedContext, DomainModel, Entity
+from jinja2 import Environment, FileSystemLoader
+
+from ..core.models import BoundedContext, DomainModel
 
 
 class BaseGenerator(ABC):
@@ -76,7 +77,7 @@ class BaseGenerator(ABC):
         template_name: str,
         context: Dict[str, Any],
         output_path: Path,
-        mkdir: bool = True
+        mkdir: bool = True,
     ) -> None:
         """
         Render a template and write it to a file.
@@ -95,15 +96,15 @@ class BaseGenerator(ABC):
             os.makedirs(output_path.parent, exist_ok=True)
 
         # Render the template and write to file
-        with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
+        with open(output_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(template.render(**context))
 
     def _register_filters(self) -> None:
         """Register custom Jinja filters."""
-        self.env.filters['camelcase'] = self._to_camel_case
-        self.env.filters['pascalcase'] = self._to_pascal_case
-        self.env.filters['snakecase'] = self._to_snake_case
-        self.env.filters['kebabcase'] = self._to_kebab_case
+        self.env.filters["camelcase"] = self._to_camel_case
+        self.env.filters["pascalcase"] = self._to_pascal_case
+        self.env.filters["snakecase"] = self._to_snake_case
+        self.env.filters["kebabcase"] = self._to_kebab_case
 
     @staticmethod
     def _to_camel_case(s: str) -> str:
@@ -115,18 +116,18 @@ class BaseGenerator(ABC):
     def _to_pascal_case(s: str) -> str:
         """Convert a string to PascalCase."""
         # Split on common separators
-        parts = s.replace('-', ' ').replace('_', ' ').split()
-        return ''.join(p.capitalize() for p in parts)
+        parts = s.replace("-", " ").replace("_", " ").split()
+        return "".join(p.capitalize() for p in parts)
 
     @staticmethod
     def _to_snake_case(s: str) -> str:
         """Convert a string to snake_case."""
         # First convert camelCase or PascalCase
-        s1 = ''.join('_' + c.lower() if c.isupper() else c for c in s).lstrip('_')
+        s1 = "".join("_" + c.lower() if c.isupper() else c for c in s).lstrip("_")
         # Then handle any remaining separators
-        return s1.replace('-', '_').replace(' ', '_').lower()
+        return s1.replace("-", "_").replace(" ", "_").lower()
 
     @staticmethod
     def _to_kebab_case(s: str) -> str:
         """Convert a string to kebab-case."""
-        return BaseGenerator._to_snake_case(s).replace('_', '-')
+        return BaseGenerator._to_snake_case(s).replace("_", "-")

@@ -71,7 +71,7 @@ backend/
 ### Core Domain Components (Python)
 
 ```python
-# src/domain/common/value_objects/entity_id.py
+# domainforge/domain/common/value_objects/entity_id.py
 import uuid
 from dataclasses import dataclass
 
@@ -90,7 +90,7 @@ class EntityId:
         return self.value == other.value
 
 
-# src/domain/common/events/domain_event.py
+# domainforge/domain/common/events/domain_event.py
 from abc import ABC
 from datetime import datetime
 import uuid
@@ -103,7 +103,7 @@ class DomainEvent(ABC):
     occurred_on: datetime = field(default_factory=datetime.now)
 
 
-# src/domain/common/events/event_bus.py
+# domainforge/domain/common/events/event_bus.py
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, List, Type
 from .domain_event import DomainEvent
@@ -125,7 +125,7 @@ class EventBus(ABC):
         pass
 
 
-# src/domain/entity/entity.py
+# domainforge/domain/entity/entity.py
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Optional
@@ -162,7 +162,7 @@ class Entity:
         return True
 
 
-# src/domain/entity/events/entity_created_event.py
+# domainforge/domain/entity/events/entity_created_event.py
 from ...common.events.domain_event import DomainEvent
 from ...common.value_objects.entity_id import EntityId
 from ..entity import EntityType
@@ -175,7 +175,7 @@ class EntityCreatedEvent(DomainEvent):
         self.entity_type = entity_type
 
 
-# src/domain/entity/repositories/entity_repository.py
+# domainforge/domain/entity/repositories/entity_repository.py
 from abc import ABC, abstractmethod
 from typing import Optional
 from ..entity import Entity
@@ -199,7 +199,7 @@ class EntityRepository(ABC):
 ### Application Layer (Python)
 
 ```python
-# src/application/dto/entity_dto.py
+# domainforge/application/dto/entity_dto.py
 from dataclasses import dataclass
 from typing import Dict, Any
 
@@ -211,7 +211,7 @@ class EntityDto:
     attributes: Dict[str, Any]
 
 
-# src/application/mappers/entity_mapper.py
+# domainforge/application/mappers/entity_mapper.py
 from ...domain.entity.entity import Entity, EntityType, Value
 from ...domain.common.value_objects.entity_id import EntityId
 from ..dto.entity_dto import EntityDto
@@ -245,7 +245,7 @@ class EntityMapper:
         )
 
 
-# src/application/use_cases/entity_use_case.py
+# domainforge/application/use_cases/entity_use_case.py
 from abc import ABC, abstractmethod
 from ..dto.entity_dto import EntityDto
 from ...domain.common.value_objects.entity_id import EntityId
@@ -308,7 +308,7 @@ class EntityUseCaseImpl(EntityUseCase):
 ### Infrastructure Layer (Python)
 
 ```python
-# src/infrastructure/messaging/in_memory_event_bus.py
+# domainforge/infrastructure/messaging/in_memory_event_bus.py
 from typing import Dict, List, Type
 from ...domain.common.events.domain_event import DomainEvent
 from ...domain.common.events.event_bus import EventBus, EventHandler
@@ -332,7 +332,7 @@ class InMemoryEventBus(EventBus):
         self.handlers[event_type].append(handler)
 
 
-# src/infrastructure/persistence/sqlalchemy/models.py
+# domainforge/infrastructure/persistence/sqlalchemy/models.py
 from sqlalchemy import Column, String, JSON, Text
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -346,7 +346,7 @@ class EntityModel(Base):
     attributes = Column(JSON, nullable=False)
 
 
-# src/infrastructure/persistence/sqlalchemy/repositories/entity_repository.py
+# domainforge/infrastructure/persistence/sqlalchemy/repositories/entity_repository.py
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -408,7 +408,7 @@ class SqlAlchemyEntityRepository(EntityRepository):
 ### API Controllers (Python with FastAPI)
 
 ```python
-# src/adapters/primary/api/entity_controller.py
+# domainforge/adapters/primary/api/entity_controller.py
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from ....application.dto.entity_dto import EntityDto
@@ -447,7 +447,7 @@ async def update_entity(id: str, entity_dto: EntityDto, use_case: EntityUseCase 
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# src/main.py
+# domainforge/main.py
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -470,13 +470,13 @@ app.add_middleware(
 app.include_router(entity_router)
 
 if __name__ == "__main__":
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("domainforge.main:app", host="0.0.0.0", port=8000, reload=True)
 ```
 
 ### Dependency Injection (Python)
 
 ```python
-# src/infrastructure/dependency_injection.py
+# domainforge/infrastructure/dependency_injection.py
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from .persistence.sqlalchemy.database import get_session
@@ -538,7 +538,7 @@ frontend/
 // src/domain/entity/EntityId.ts
 export class EntityId {
   constructor(public readonly value: string) {
-    if (!value) throw new Error('EntityId cannot be empty');
+    if (!value) throw new Error("EntityId cannot be empty");
   }
 
   equals(other: EntityId): boolean {
@@ -552,9 +552,9 @@ export class EntityId {
 
 // src/domain/entity/EntityTypes.ts
 export enum EntityType {
-  DOCUMENT = 'document',
-  PRODUCT = 'product',
-  USER = 'user',
+  DOCUMENT = "document",
+  PRODUCT = "product",
+  USER = "user",
 }
 
 export interface Value {
@@ -563,8 +563,8 @@ export interface Value {
 }
 
 // src/domain/entity/Entity.ts
-import { EntityId } from './EntityId';
-import { EntityType, Value } from './EntityTypes';
+import { EntityId } from "./EntityId";
+import { EntityType, Value } from "./EntityTypes";
 
 export class Entity {
   constructor(
@@ -611,9 +611,9 @@ export abstract class DomainEvent {
 }
 
 // src/domain/events/EntityCreatedEvent.ts
-import { DomainEvent } from './DomainEvent';
-import { EntityId } from '../entity/EntityId';
-import { EntityType } from '../entity/EntityTypes';
+import { DomainEvent } from "./DomainEvent";
+import { EntityId } from "../entity/EntityId";
+import { EntityType } from "../entity/EntityTypes";
 
 export class EntityCreatedEvent extends DomainEvent {
   constructor(
@@ -636,8 +636,8 @@ export interface EntityDto {
 }
 
 // src/application/ports/EntityRepository.ts
-import { Entity } from '../../domain/entity/Entity';
-import { EntityId } from '../../domain/entity/EntityId';
+import { Entity } from "../../domain/entity/Entity";
+import { EntityId } from "../../domain/entity/EntityId";
 
 export interface EntityRepository {
   findById(id: EntityId): Promise<Entity | null>;
@@ -646,7 +646,7 @@ export interface EntityRepository {
 }
 
 // src/application/ports/ApiClient.ts
-import { EntityDto } from '../dto/EntityDto';
+import { EntityDto } from "../dto/EntityDto";
 
 export interface ApiClient {
   getEntity(id: string): Promise<EntityDto>;
@@ -656,11 +656,11 @@ export interface ApiClient {
 }
 
 // src/application/useCases/EntityUseCase.ts
-import { EntityDto } from '../dto/EntityDto';
-import { ApiClient } from '../ports/ApiClient';
-import { EntityId } from '../../domain/entity/EntityId';
-import { Entity } from '../../domain/entity/Entity';
-import { EntityType, Value } from '../../domain/entity/EntityTypes';
+import { EntityDto } from "../dto/EntityDto";
+import { ApiClient } from "../ports/ApiClient";
+import { EntityId } from "../../domain/entity/EntityId";
+import { Entity } from "../../domain/entity/Entity";
+import { EntityType, Value } from "../../domain/entity/EntityTypes";
 
 export class EntityUseCase {
   constructor(private apiClient: ApiClient) {}
@@ -672,7 +672,7 @@ export class EntityUseCase {
 
   async createEntity(entity: Entity): Promise<void> {
     if (!entity.validateState()) {
-      throw new Error('Invalid entity state');
+      throw new Error("Invalid entity state");
     }
 
     const dto = this.mapDomainToDto(entity);
@@ -681,7 +681,7 @@ export class EntityUseCase {
 
   async updateEntity(id: string, entity: Entity): Promise<void> {
     if (!entity.validateState()) {
-      throw new Error('Invalid entity state');
+      throw new Error("Invalid entity state");
     }
 
     const dto = this.mapDomainToDto(entity);
@@ -700,7 +700,7 @@ export class EntityUseCase {
     Object.entries(dto.attributes).forEach(([key, value]) => {
       attributes.set(key, {
         type: typeof value,
-        data: value
+        data: value,
       });
     });
 
@@ -717,7 +717,7 @@ export class EntityUseCase {
     return {
       id: entity.getId().value,
       type: entity.getType(),
-      attributes
+      attributes,
     };
   }
 }
@@ -742,9 +742,9 @@ export class HttpClient {
 
   async post<T>(url: string, data: any): Promise<T> {
     const response = await fetch(`${this.baseUrl}${url}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
@@ -758,9 +758,9 @@ export class HttpClient {
 
   async put<T>(url: string, data: any): Promise<T> {
     const response = await fetch(`${this.baseUrl}${url}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
@@ -774,7 +774,7 @@ export class HttpClient {
 
   async delete<T>(url: string): Promise<T> {
     const response = await fetch(`${this.baseUrl}${url}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
 
     if (!response.ok) {
@@ -786,9 +786,9 @@ export class HttpClient {
 }
 
 // src/infrastructure/api/EntityApiClient.ts
-import { ApiClient } from '../../application/ports/ApiClient';
-import { EntityDto } from '../../application/dto/EntityDto';
-import { HttpClient } from '../http/HttpClient';
+import { ApiClient } from "../../application/ports/ApiClient";
+import { EntityDto } from "../../application/dto/EntityDto";
+import { HttpClient } from "../http/HttpClient";
 
 export class EntityApiClient implements ApiClient {
   constructor(private httpClient: HttpClient) {}
@@ -798,7 +798,7 @@ export class EntityApiClient implements ApiClient {
   }
 
   async createEntity(entity: EntityDto): Promise<void> {
-    await this.httpClient.post<{ status: string }>('/api/entities/', entity);
+    await this.httpClient.post<{ status: string }>("/api/entities/", entity);
   }
 
   async updateEntity(id: string, entity: EntityDto): Promise<void> {
@@ -811,11 +811,11 @@ export class EntityApiClient implements ApiClient {
 }
 
 // src/infrastructure/store/EntityStore.ts
-import { makeAutoObservable, runInAction } from 'mobx';
-import { Entity } from '../../domain/entity/Entity';
-import { EntityUseCase } from '../../application/useCases/EntityUseCase';
-import { EntityId } from '../../domain/entity/EntityId';
-import { EntityType } from '../../domain/entity/EntityTypes';
+import { makeAutoObservable, runInAction } from "mobx";
+import { Entity } from "../../domain/entity/Entity";
+import { EntityUseCase } from "../../application/useCases/EntityUseCase";
+import { EntityId } from "../../domain/entity/EntityId";
+import { EntityType } from "../../domain/entity/EntityTypes";
 
 export class EntityStore {
   entities: Map<string, Entity> = new Map();
@@ -839,7 +839,7 @@ export class EntityStore {
       });
     } catch (error) {
       runInAction(() => {
-        this.error = error instanceof Error ? error.message : 'Unknown error';
+        this.error = error instanceof Error ? error.message : "Unknown error";
         this.loading = false;
       });
     }
@@ -852,7 +852,7 @@ export class EntityStore {
     Object.entries(attributes).forEach(([key, value]) => {
       attributeMap.set(key, {
         type: typeof value,
-        data: value
+        data: value,
       });
     });
 
@@ -870,7 +870,7 @@ export class EntityStore {
       });
     } catch (error) {
       runInAction(() => {
-        this.error = error instanceof Error ? error.message : 'Unknown error';
+        this.error = error instanceof Error ? error.message : "Unknown error";
         this.loading = false;
       });
     }
@@ -1151,12 +1151,14 @@ The frontend and backend communicate through a REST API. The backend exposes end
 ### Dependency Injection
 
 Both the frontend and backend use dependency injection to manage dependencies:
+
 - Python backend uses FastAPI's dependency injection system
 - TypeScript frontend uses a simple DI container for creating and providing service instances
 
 ### Event-Driven Architecture
 
 The event-driven architecture is implemented through:
+
 - Backend: An in-memory event bus that allows loose coupling between components
 - Frontend: MobX stores that react to state changes and propagate updates to UI components
 
@@ -1169,14 +1171,17 @@ While the frontend and backend have separate implementations of domain models, t
 Let's examine how a document management feature would be implemented using this architecture:
 
 1. **Domain Model**:
+
    - Define document-specific entities and value objects in both Python and TypeScript
    - Implement document-related domain events
 
 2. **Application Layer**:
+
    - Create document use cases with specific business rules
    - Implement document DTOs and mappers
 
 3. **Infrastructure**:
+
    - Implement document repositories in both languages
    - Create document-specific API endpoints
 
@@ -1199,4 +1204,3 @@ This architecture provides several key benefits:
 5. **Domain Focus**: Business logic remains at the core, independent of technical details
 
 ### Future Considerations
-

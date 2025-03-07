@@ -5,13 +5,12 @@ This module coordinates the parsing and transformation of DSL files into
 domain models that can be used by code generators.
 """
 
-import json
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Union, List, Set
 
+from .models import DomainModel
 from .parser import DomainForgeParser
 from .transformer import DomainForgeTransformer
-from .models import DomainModel
 
 
 class DomainForgeInterpreter:
@@ -22,7 +21,7 @@ class DomainForgeInterpreter:
     domain models that can be used by code generators.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the interpreter with a parser and transformer."""
         self.parser = DomainForgeParser()
         self.transformer = DomainForgeTransformer()
@@ -68,7 +67,7 @@ class DomainForgeInterpreter:
             ValueError: If the model is semantically invalid
         """
         # Read and parse the file
-        with open(file_path, 'r') as f:
+        with open(file_path) as f:
             text = f.read()
 
         return self.interpret(text)
@@ -88,7 +87,7 @@ class DomainForgeInterpreter:
         model_json = model.model_dump_json(indent=2)
 
         # Write to file
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write(model_json)
 
     def _validate_model(self, model: DomainModel) -> None:
@@ -98,15 +97,33 @@ class DomainForgeInterpreter:
         Args:
             model: The domain model to validate
 
+        Returns:
+            A list of validation error messages
+
         Raises:
             ValueError: If the model is semantically invalid
         """
-        errors = []
+        errors: List[str] = []
 
-        # Track all defined names to catch duplicates
+        # Validate contexts
+        self._validate_contexts(model, errors)
+
+        # Validate entities
+        self._validate_entities(model, errors)
+
+        if errors:
+            raise ValueError("Model validation failed:\n" + "\n".join(errors))
+
+    def _validate_contexts(self, model: DomainModel, errors: List[str]) -> None:
+        """
+        Validate bounded contexts for semantic correctness.
+
+        Args:
+            model: The domain model to validate
+            errors: A list to collect validation error messages
+        """
         defined_names: Dict[str, str] = {}
 
-        # First pass: Register all names
         for context in model.bounded_contexts:
             # Check for duplicate context names
             if context.name in defined_names:
@@ -145,7 +162,22 @@ class DomainForgeInterpreter:
                     )
                 defined_names[repo.name] = "repository"
 
-        # Second pass: Validate relationships and properties
+    def _validate_entities(self, model: DomainModel, errors: List[str]) -> None:
+        """
+        Validate entities for semantic correctness.
+
+        Args:
+            model: The domain model to validate
+            errors: A list to collect validation error messages
+        """
+        # Initialize defined_names dictionary for the scope
+        defined_names: Dict[str, str] = {}
+
+        # First pass: collect all entity names
+        for context in model.bounded_contexts:
+            for entity in context.entities:
+                defined_names[entity.name] = "entity"
+
         for context in model.bounded_contexts:
             for entity in context.entities:
                 # Validate entity properties
@@ -164,6 +196,3 @@ class DomainForgeInterpreter:
                         errors.append(
                             f"Unknown target entity in relationship: {rel.target_entity}"
                         )
-
-        if errors:
-            raise ValueError("Model validation failed:\n" + "\n".join(errors))

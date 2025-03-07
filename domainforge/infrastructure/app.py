@@ -5,18 +5,20 @@ This module sets up the FastAPI application with all necessary middleware,
 database connections, and route handlers.
 """
 
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator  # added import
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
-from contextlib import asynccontextmanager
+from sqlalchemy.ext.asyncio import create_async_engine
 
+from ..api.controllers.entity_controller import router as entity_router
 from ..config.settings import get_settings
 from .database import init_database
-from ..api.controllers.entity_controller import router as entity_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Application lifespan manager.
 

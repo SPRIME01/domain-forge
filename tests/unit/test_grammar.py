@@ -1,5 +1,6 @@
 import pytest
-from lark import Lark, Tree, Token
+from lark import Lark, Token, Tree
+
 
 @pytest.fixture
 def parser():
@@ -87,7 +88,8 @@ def parser():
     %ignore WS
     """
 
-    return Lark(grammar, parser='lalr')
+    return Lark(grammar, parser="lalr")
+
 
 def test_parse_simple_entity(parser):
     dsl = """
@@ -126,6 +128,7 @@ def test_parse_simple_entity(parser):
     simple_type = prop_type.children[0]
     assert simple_type.data == "simple_type"
     assert simple_type.children[0] == Token("IDENTIFIER", "String")
+
 
 def test_parse_relationship(parser):
     dsl = """
@@ -171,6 +174,7 @@ def test_parse_relationship(parser):
     target = relationship.children[2]
     assert target.data == "target_entity"
     assert target.children[0] == Token("IDENTIFIER", "Entity2")
+
 
 def test_parse_service_with_method(parser):
     dsl = """
@@ -226,6 +230,7 @@ def test_parse_service_with_method(parser):
     assert return_simple_type.data == "simple_type"
     assert return_simple_type.children[0] == Token("IDENTIFIER", "Void")
 
+
 def test_parse_ui_component(parser):
     dsl = """
     @Context {
@@ -264,6 +269,7 @@ def test_parse_ui_component(parser):
     description = ui_desc.children[0]
     assert description.data == "description"
     assert description.children[0] == Token("STRING", '"A form for the entity"')
+
 
 def test_parse_api_definition(parser):
     dsl = """
