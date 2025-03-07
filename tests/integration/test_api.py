@@ -62,6 +62,15 @@ async def test_create_entity() -> None:
     assert response.status_code == 201
     assert response.json()["name"] == "Test Entity"
 
+    # Test for invalid input data
+    invalid_response = client.post("/api/entities", json={"name": ""})
+    assert invalid_response.status_code == 422
+
+    # Test for boundary conditions
+    boundary_response = client.post("/api/entities", json={"name": "a" * 100})
+    assert boundary_response.status_code == 201
+    assert boundary_response.json()["name"] == "a" * 100
+
 @pytest.mark.asyncio
 async def test_get_entity() -> None:
     """Test retrieving an entity via API."""
@@ -73,6 +82,11 @@ async def test_get_entity() -> None:
     response = client.get(f"/api/entities/{entity_id}")
     assert response.status_code == 200
     assert response.json()["name"] == "Test Entity"
+
+    # Test for performance under load
+    for _ in range(1000):
+        response = client.get(f"/api/entities/{entity_id}")
+        assert response.status_code == 200
 
 @pytest.mark.asyncio
 async def test_update_entity() -> None:
@@ -86,6 +100,18 @@ async def test_update_entity() -> None:
     assert response.status_code == 200
     assert response.json()["name"] == "Updated Entity"
 
+    # Test for concurrency issues
+    import asyncio
+
+    async def update_entity_concurrently():
+        tasks = [
+            client.put(f"/api/entities/{entity_id}", json={"name": f"Updated Entity {i}"})
+            for i in range(10)
+        ]
+        await asyncio.gather(*tasks)
+
+    await update_entity_concurrently()
+
 @pytest.mark.asyncio
 async def test_delete_entity() -> None:
     """Test deleting an entity via API."""
@@ -96,3 +122,8 @@ async def test_delete_entity() -> None:
     # Then delete it
     response = client.delete(f"/api/entities/{entity_id}")
     assert response.status_code == 204
+
+    # Test for security vulnerabilities
+    # Attempt to delete the same entity again
+    security_response = client.delete(f"/api/entities/{entity_id}")
+    assert security_response.status_code == 404

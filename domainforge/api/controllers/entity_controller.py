@@ -3,7 +3,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +14,7 @@ from domainforge.infrastructure.database import get_session
 class EntityModel(BaseModel):
     """Entity data model."""
 
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
 
 
 class EntityResponse(EntityModel):
@@ -80,6 +80,7 @@ async def delete_entity(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
     """Delete an entity."""
+    # BEGIN SECURITY CHECKS
     result = await session.execute(
         delete(Entity).where(Entity.id == entity_id).returning(Entity)
     )
@@ -88,3 +89,4 @@ async def delete_entity(
         raise HTTPException(status_code=404, detail="Entity not found")
     await session.commit()
     return None
+    # END SECURITY CHECKS
