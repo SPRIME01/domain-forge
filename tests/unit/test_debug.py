@@ -123,6 +123,61 @@ def test_debug_parse_tree():
     # Use pytest.fail to display the output
     pytest.fail(f"Parse Tree Structure:\n{tree_json}")
 
+    actual = tree_dict  # your actual result
+    expected = {  # update this expected structure to match the new one
+        "type": "Tree",
+        "data": "start",
+        "children": [
+            {
+                "type": "Tree",
+                "data": "context_definition",
+                "children": [
+                    {"type": "Token", "token_type": "IDENTIFIER", "value": "Context"},
+                    {
+                        "type": "Tree",
+                        "data": "context_children",
+                        "children": [
+                            {
+                                "type": "Tree",
+                                "data": "entity_definition",
+                                "children": [
+                                    {"type": "Token", "token_type": "IDENTIFIER", "value": "Entity"},
+                                    {
+                                        "type": "Tree",
+                                        "data": "entity_children",
+                                        "children": [
+                                            {
+                                                "type": "Tree",
+                                                "data": "property_definition",
+                                                "children": [
+                                                    {"type": "Token", "token_type": "IDENTIFIER", "value": "name"},
+                                                    {
+                                                        "type": "Tree",
+                                                        "data": "type_definition",
+                                                        "children": [
+                                                            {
+                                                                "type": "Tree",
+                                                                "data": "simple_type",
+                                                                "children": [
+                                                                    {"type": "Token", "token_type": "IDENTIFIER", "value": "String"}
+                                                                ],
+                                                            }
+                                                        ],
+                                                    },
+                                                ],
+                                            }
+                                        ],
+                                    },
+                                ],
+                            }
+                        ],
+                    },
+                ],
+            }
+        ],
+    }
+    assert actual == expected, f"Parse Tree Structure:\nExpected: {expected}\nGot: {actual}"
+
 
 def test_debug_property_definition():
     """Debug test for property_definition transformer method."""

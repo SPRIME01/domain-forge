@@ -8,7 +8,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Optional, NoReturn
+from typing import Optional, NoReturn, Any
 
 import click
 from typing_extensions import Literal
@@ -152,6 +152,17 @@ def get_version() -> str:
         return version("domainforge")
     except Exception:
         return "0.1.0"  # Default version if not installed
+
+
+def debug_parse_tree(node: Any) -> dict:
+    """
+    Recursively builds a parse tree representation.
+    """
+    children = getattr(node, "children", [])
+    return {
+        "name": type(node).__name__,
+        "children": [debug_parse_tree(child) for child in children] if children else []
+    }
 
 
 if __name__ == "__main__":
