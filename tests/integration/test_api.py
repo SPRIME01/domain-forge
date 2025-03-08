@@ -58,72 +58,84 @@ async def setup_test_database() -> AsyncGenerator[None, None]:
 @pytest.mark.asyncio
 async def test_create_entity() -> None:
     """Test creating an entity via API."""
-    response = client.post("/api/entities", json={"name": "Test Entity"})
-    assert response.status_code == 201
-    assert response.json()["name"] == "Test Entity"
+    try:
+        response = client.post("/api/entities", json={"name": "Test Entity"})
+        assert response.status_code == 201
+        assert response.json()["name"] == "Test Entity"
 
-    # Test for invalid input data
-    invalid_response = client.post("/api/entities", json={"name": ""})
-    assert invalid_response.status_code == 422
+        # Test for invalid input data
+        invalid_response = client.post("/api/entities", json={"name": ""})
+        assert invalid_response.status_code == 422
 
-    # Test for boundary conditions
-    boundary_response = client.post("/api/entities", json={"name": "a" * 100})
-    assert boundary_response.status_code == 201
-    assert boundary_response.json()["name"] == "a" * 100
+        # Test for boundary conditions
+        boundary_response = client.post("/api/entities", json={"name": "a" * 100})
+        assert boundary_response.status_code == 201
+        assert boundary_response.json()["name"] == "a" * 100
+    except Exception as e:
+        pytest.fail(f"API request failed: {e}")
 
 @pytest.mark.asyncio
 async def test_get_entity() -> None:
     """Test retrieving an entity via API."""
-    # Create an entity first
-    create_response = client.post("/api/entities", json={"name": "Test Entity"})
-    entity_id = create_response.json()["id"]
+    try:
+        # Create an entity first
+        create_response = client.post("/api/entities", json={"name": "Test Entity"})
+        entity_id = create_response.json()["id"]
 
-    # Then try to get it
-    response = client.get(f"/api/entities/{entity_id}")
-    assert response.status_code == 200
-    assert response.json()["name"] == "Test Entity"
-
-    # Test for performance under load
-    for _ in range(1000):
+        # Then try to get it
         response = client.get(f"/api/entities/{entity_id}")
         assert response.status_code == 200
+        assert response.json()["name"] == "Test Entity"
+
+        # Test for performance under load
+        for _ in range(1000):
+            response = client.get(f"/api/entities/{entity_id}")
+            assert response.status_code == 200
+    except Exception as e:
+        pytest.fail(f"API request failed: {e}")
 
 @pytest.mark.asyncio
 async def test_update_entity() -> None:
     """Test updating an entity via API."""
-    # Create an entity first
-    create_response = client.post("/api/entities", json={"name": "Test Entity"})
-    entity_id = create_response.json()["id"]
+    try:
+        # Create an entity first
+        create_response = client.post("/api/entities", json={"name": "Test Entity"})
+        entity_id = create_response.json()["id"]
 
-    # Then update it
-    response = client.put(f"/api/entities/{entity_id}", json={"name": "Updated Entity"})
-    assert response.status_code == 200
-    assert response.json()["name"] == "Updated Entity"
+        # Then update it
+        response = client.put(f"/api/entities/{entity_id}", json={"name": "Updated Entity"})
+        assert response.status_code == 200
+        assert response.json()["name"] == "Updated Entity"
 
-    # Test for concurrency issues
-    import asyncio
+        # Test for concurrency issues
+        import asyncio
 
-    async def update_entity_concurrently():
-        tasks = [
-            client.put(f"/api/entities/{entity_id}", json={"name": f"Updated Entity {i}"})
-            for i in range(10)
-        ]
-        await asyncio.gather(*tasks)
+        async def update_entity_concurrently():
+            tasks = [
+                client.put(f"/api/entities/{entity_id}", json={"name": f"Updated Entity {i}"})
+                for i in range(10)
+            ]
+            await asyncio.gather(*tasks)
 
-    await update_entity_concurrently()
+        await update_entity_concurrently()
+    except Exception as e:
+        pytest.fail(f"API request failed: {e}")
 
 @pytest.mark.asyncio
 async def test_delete_entity() -> None:
     """Test deleting an entity via API."""
-    # Create an entity first
-    create_response = client.post("/api/entities", json={"name": "Test Entity"})
-    entity_id = create_response.json()["id"]
+    try:
+        # Create an entity first
+        create_response = client.post("/api/entities", json={"name": "Test Entity"})
+        entity_id = create_response.json()["id"]
 
-    # Then delete it
-    response = client.delete(f"/api/entities/{entity_id}")
-    assert response.status_code == 204
+        # Then delete it
+        response = client.delete(f"/api/entities/{entity_id}")
+        assert response.status_code == 204
 
-    # Test for security vulnerabilities
-    # Attempt to delete the same entity again
-    security_response = client.delete(f"/api/entities/{entity_id}")
-    assert security_response.status_code == 404
+        # Test for security vulnerabilities
+        # Attempt to delete the same entity again
+        security_response = client.delete(f"/api/entities/{entity_id}")
+        assert security_response.status_code == 404
+    except Exception as e:
+        pytest.fail(f"API request failed: {e}")

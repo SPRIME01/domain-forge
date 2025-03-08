@@ -33,12 +33,16 @@ async def create_entity(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Entity:
     """Create a new entity."""
-    result = await session.execute(
-        insert(Entity).values(name=entity.name).returning(Entity)
-    )
-    created_entity = result.scalar_one()
-    await session.commit()
-    return created_entity
+    try:
+        result = await session.execute(
+            insert(Entity).values(name=entity.name).returning(Entity)
+        )
+        created_entity = result.scalar_one()
+        await session.commit()
+        return created_entity
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{entity_id}", response_model=EntityResponse)
@@ -47,11 +51,14 @@ async def get_entity(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Entity:
     """Get an entity by ID."""
-    result = await session.execute(select(Entity).where(Entity.id == entity_id))
-    entity = result.scalar_one_or_none()
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-    return entity
+    try:
+        result = await session.execute(select(Entity).where(Entity.id == entity_id))
+        entity = result.scalar_one_or_none()
+        if not entity:
+            raise HTTPException(status_code=404, detail="Entity not found")
+        return entity
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/{entity_id}", response_model=EntityResponse)
@@ -61,17 +68,21 @@ async def update_entity(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> Entity:
     """Update an entity."""
-    result = await session.execute(
-        update(Entity)
-        .where(Entity.id == entity_id)
-        .values(name=entity.name)
-        .returning(Entity)
-    )
-    updated_entity = result.scalar_one_or_none()
-    if not updated_entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-    await session.commit()
-    return updated_entity
+    try:
+        result = await session.execute(
+            update(Entity)
+            .where(Entity.id == entity_id)
+            .values(name=entity.name)
+            .returning(Entity)
+        )
+        updated_entity = result.scalar_one_or_none()
+        if not updated_entity:
+            raise HTTPException(status_code=404, detail="Entity not found")
+        await session.commit()
+        return updated_entity
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{entity_id}", status_code=204)
@@ -80,13 +91,17 @@ async def delete_entity(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
     """Delete an entity."""
-    # BEGIN SECURITY CHECKS
-    result = await session.execute(
-        delete(Entity).where(Entity.id == entity_id).returning(Entity)
-    )
-    deleted_entity = result.scalar_one_or_none()
-    if not deleted_entity:
-        raise HTTPException(status_code=404, detail="Entity not found")
-    await session.commit()
-    return None
-    # END SECURITY CHECKS
+    try:
+        # BEGIN SECURITY CHECKS
+        result = await session.execute(
+            delete(Entity).where(Entity.id == entity_id).returning(Entity)
+        )
+        deleted_entity = result.scalar_one_or_none()
+        if not deleted_entity:
+            raise HTTPException(status_code=404, detail="Entity not found")
+        await session.commit()
+        return None
+        # END SECURITY CHECKS
+    except Exception as e:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
