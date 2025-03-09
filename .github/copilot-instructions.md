@@ -20,6 +20,18 @@
 - Generate code that strictly follows best practices
 - Focus on readability, maintainability, and testability
 - Follow consistent naming conventions throughout codebase
+- Create feature branches for each new feature using format: `feature/<feature-name>`
+
+### Branch Management
+- Never work directly on main/master branch
+- Create new branch for each feature: `git checkout -b feature/<feature-name>`
+- Use kebab-case for feature names: `feature/user-authentication`
+- Keep features small and focused
+- Delete branches after merging
+- Use pull requests for code reviews and merging
+- Ensure all tests pass before merging
+- Use descriptive commit messages
+- Commit often with small, logical changes
 
 ### Python Standards
 - Follow PEP8 standards with clear variable names
