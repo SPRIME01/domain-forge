@@ -5,6 +5,7 @@ Integration tests combining repository, service, and domain behavior.
 import os
 import tempfile
 import pytest
+import pytest_asyncio
 import asyncio
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
@@ -74,15 +75,15 @@ def repo_file() -> Generator[str, None, None]:
         os.unlink(temp_path)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def repository(repo_file: str) -> JsonFileRepository:
     return JsonFileRepository(repo_file)
 
 
 @pytest.mark.asyncio
 async def test_full_entity_flow(repository):
-    repo_instance = await repository
-    service = EntityService(repo_instance)
+    """Test the full entity lifecycle flow."""
+    service = EntityService(repository)
     # Create entity
     entity_data = {
         "id": "integration-1",

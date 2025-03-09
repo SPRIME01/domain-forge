@@ -57,7 +57,10 @@ async def get_entity(
         if not entity:
             raise HTTPException(status_code=404, detail="Entity not found")
         return entity
+    except HTTPException:
+        raise
     except Exception as e:
+        await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -91,8 +94,8 @@ async def delete_entity(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
     """Delete an entity."""
+    # BEGIN SECURITY CHECKS
     try:
-        # BEGIN SECURITY CHECKS
         result = await session.execute(
             delete(Entity).where(Entity.id == entity_id).returning(Entity)
         )
@@ -100,8 +103,9 @@ async def delete_entity(
         if not deleted_entity:
             raise HTTPException(status_code=404, detail="Entity not found")
         await session.commit()
-        return None
-        # END SECURITY CHECKS
+    except HTTPException:
+        raise
     except Exception as e:
         await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+    # END SECURITY CHECKS
