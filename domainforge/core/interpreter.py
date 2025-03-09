@@ -6,11 +6,16 @@ domain models that can be used by code generators.
 """
 
 from pathlib import Path
-from typing import Dict, Union, List, Set
+from typing import Dict, Union, List, Set, Any
 
 from .models import DomainModel
 from .parser import DomainForgeParser
 from .transformer import DomainForgeTransformer
+from domainforge.generators.python_backend_generator import PythonBackendGenerator
+from domainforge.generators.typescript_frontend_generator import (
+    TypeScriptFrontendGenerator,
+)
+import os
 
 
 class DomainForgeInterpreter:
@@ -196,3 +201,98 @@ class DomainForgeInterpreter:
                         errors.append(
                             f"Unknown target entity in relationship: {rel.target_entity}"
                         )
+
+
+class DomainElicitationSession:
+    """Manages the conversation flow to elicit domain requirements."""
+
+    def __init__(self, session_id: str):
+        self.session_id = session_id
+        self.domain_entities = {}
+        self.relationships = []
+        self.current_stage = "introduction"
+
+    def add_entity(self, name: str, properties: List[str]) -> None:
+        """Add an entity to the domain model."""
+        self.domain_entities[name] = properties
+
+    def add_relationship(
+        self, source: str, target: str, relationship_type: str
+    ) -> None:
+        """Define a relationship between entities."""
+        self.relationships.append(
+            {"source": source, "target": target, "type": relationship_type}
+        )
+
+    def get_domain_model(self) -> Dict[str, Any]:
+        """Return the current state of the domain model."""
+        return {"entities": self.domain_entities, "relationships": self.relationships}
+
+
+class DomainModelBuilder:
+    """Constructs a domain model from conversation insights."""
+
+    def __init__(self) -> None:
+        self.entities = {}
+        self.relationships = []
+
+    def add_entity(self, name: str, properties: List[str]) -> None:
+        """Add an entity to the domain model."""
+        self.entities[name] = properties
+
+    def add_relationship(
+        self, source: str, target: str, relationship_type: str
+    ) -> None:
+        """Define a relationship between entities."""
+        self.relationships.append(
+            {"source": source, "target": target, "type": relationship_type}
+        )
+
+    def get_domain_model(self) -> Dict[str, Any]:
+        """Return the current state of the domain model."""
+        return {"entities": self.entities, "relationships": self.relationships}
+
+
+class DomainForgeDSLGenerator:
+    """Generates DomainForge DSL from structured domain model."""
+
+    def generate_dsl(self, domain_model: Dict[str, Any]) -> str:
+        """Convert structured domain model to DSL text."""
+        output = []
+
+        # Generate context definitions
+        for context_name, context in domain_model.items():
+            output.append(f"@{context_name} {{")
+
+            # Generate entities
+            for entity_name, properties in context.get("entities", {}).items():
+                output.append(f"    #{entity_name} {{")
+                for prop in properties:
+                    output.append(f"        {prop}")
+                output.append("    }")
+
+            # Generate relationships
+            for rel in context.get("relationships", []):
+                output.append(f"    {rel['source']} {rel['type']} {rel['target']}")
+
+            output.append("}")
+
+        return "\n".join(output)
+
+
+def generate_application(dsl_content: str, output_dir: str) -> None:
+    """Generate application from DSL content."""
+    interpreter = DomainForgeInterpreter()
+    domain_model = interpreter.interpret(dsl_content)
+
+    # Generate backend code
+    backend_dir = os.path.join(output_dir, "backend")
+    os.makedirs(backend_dir, exist_ok=True)
+    backend_generator = PythonBackendGenerator(output_dir=backend_dir)
+    backend_generator.generate(domain_model)
+
+    # Generate frontend code
+    frontend_dir = os.path.join(output_dir, "frontend")
+    os.makedirs(frontend_dir, exist_ok=True)
+    frontend_generator = TypeScriptFrontendGenerator(output_dir=frontend_dir)
+    frontend_generator.generate(domain_model)

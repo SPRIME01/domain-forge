@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from ..api.controllers.entity_controller import router as entity_router
+from ..api.controllers.chat_controller import router as chat_router
 from ..config.settings import get_settings
 from .database import init_database
 
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
 
     # Register routers
     app.include_router(entity_router)
+    app.include_router(chat_router)
 
     return app
 
