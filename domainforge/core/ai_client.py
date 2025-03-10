@@ -205,7 +205,7 @@ class AIClient:
             if self._is_mock_object(response):
                 return "This is a test response"
 
-            await response.raise_for_status()
+            response.raise_for_status()
 
             # Parse the response
             data = await response.json()
