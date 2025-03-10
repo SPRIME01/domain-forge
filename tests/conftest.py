@@ -3,14 +3,20 @@ Configuration and fixtures for pytest.
 
 This module contains shared fixtures and configuration for all test modules.
 """
+
 import os
 import sys
 import pytest
 from typing import Any, Dict, Generator, Optional
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add the project root to the path so we can import modules
 sys.path.append(str(Path(__file__).parent.parent))
+
 
 @pytest.fixture
 def sample_domain_entity_data() -> Dict[str, Any]:
@@ -20,18 +26,24 @@ def sample_domain_entity_data() -> Dict[str, Any]:
         "name": "Test Entity",
         "description": "A test entity for unit tests",
         "created_at": "2023-09-15T10:30:00Z",
-        "version": 1
+        "version": 1,
     }
+
 
 @pytest.fixture
 def mock_repository() -> Generator[Any, None, None]:
     """Fixture providing a mock repository for testing service layer."""
+
     # This would be replaced by an actual mock implementation
     class MockRepository:
         def __init__(self) -> None:
             self.items: Dict[str, Any] = {}
             self.called_methods: Dict[str, int] = {
-                "get": 0, "add": 0, "update": 0, "remove": 0, "list": 0
+                "get": 0,
+                "add": 0,
+                "update": 0,
+                "remove": 0,
+                "list": 0,
             }
 
         async def get(self, id: str) -> Optional[Any]:

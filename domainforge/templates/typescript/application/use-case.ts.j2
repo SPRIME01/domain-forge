@@ -1,0 +1,48 @@
+// {{ entity.name }} Use Cases
+import { {{ entity.name }} } from '../domain/models/{{ entity.name | lower }}';
+import { I{{ entity.name }}Repository } from '../domain/repositories/i{{ entity.name | lower }}-repository';
+
+export class Create{{ entity.name }}UseCase {
+    constructor(private readonly repository: I{{ entity.name }}Repository) {}
+
+    async execute(data: Partial<{{ entity.name }}>): Promise<{{ entity.name }}> {
+        const entity = new {{ entity.name }}(data);
+        return await this.repository.save(entity);
+    }
+}
+
+export class Get{{ entity.name }}UseCase {
+    constructor(private readonly repository: I{{ entity.name }}Repository) {}
+
+    async execute(id: string): Promise<{{ entity.name }} | null> {
+        return await this.repository.findById(id);
+    }
+}
+
+export class Update{{ entity.name }}UseCase {
+    constructor(private readonly repository: I{{ entity.name }}Repository) {}
+
+    async execute(id: string, data: Partial<{{ entity.name }}>): Promise<{{ entity.name }} | null> {
+        const entity = await this.repository.findById(id);
+        if (!entity) return null;
+
+        Object.assign(entity, data);
+        return await this.repository.save(entity);
+    }
+}
+
+export class Delete{{ entity.name }}UseCase {
+    constructor(private readonly repository: I{{ entity.name }}Repository) {}
+
+    async execute(id: string): Promise<boolean> {
+        return await this.repository.delete(id);
+    }
+}
+
+export class List{{ entity.name }}sUseCase {
+    constructor(private readonly repository: I{{ entity.name }}Repository) {}
+
+    async execute(): Promise<{{ entity.name }}[]> {
+        return await this.repository.findAll();
+    }
+}

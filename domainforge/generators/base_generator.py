@@ -23,7 +23,7 @@ class BaseGenerator(ABC):
     including template loading, rendering, and file system operations.
     """
 
-    def __init__(self, output_dir: str, template_dir: Optional[str] = None):
+    def __init__(self, output_dir: str, template_dir: Optional[str | Path] = None):
         """
         Initialize the generator.
 
@@ -36,10 +36,22 @@ class BaseGenerator(ABC):
         # If no template directory specified, use the default templates
         if template_dir is None:
             template_dir = Path(__file__).parent.parent / "templates"
+        else:
+            template_dir = Path(template_dir)
 
-        # Initialize Jinja environment
+        # Build search paths for templates with correct priorities
+        search_paths = [
+            template_dir,  # Specific template directory (if provided)
+            Path(__file__).parent.parent / "templates",  # Core templates
+            Path.cwd() / "templates",  # Templates in current working directory
+            Path(__file__).parent.parent.parent / "templates",  # Project root templates
+        ]
+
+        # Initialize Jinja environment with multiple search paths
         self.env = Environment(
-            loader=FileSystemLoader(template_dir),
+            loader=FileSystemLoader(
+                [str(path) for path in search_paths if path.exists()]
+            ),
             trim_blocks=True,
             lstrip_blocks=True,
             keep_trailing_newline=True,

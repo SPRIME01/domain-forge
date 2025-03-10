@@ -1,0 +1,28 @@
+// {{ entity.name }} Mapper
+import { {{ entity.name }} } from '../domain/models/{{ entity.name | lower }}';
+
+export class {{ entity.name }}Mapper {
+    static toDomain(raw: any): {{ entity.name }} {
+        return new {{ entity.name }}({
+            {% for prop in entity.properties %}
+            {{ prop.name }}: raw.{{ prop.name }},
+            {% endfor %}
+        });
+    }
+
+    static toDTO(entity: {{ entity.name }}): any {
+        return {
+            {% for prop in entity.properties %}
+            {{ prop.name }}: entity.{{ prop.name }},
+            {% endfor %}
+        };
+    }
+
+    static toDomainList(rawList: any[]): {{ entity.name }}[] {
+        return rawList.map(raw => this.toDomain(raw));
+    }
+
+    static toDTOList(entities: {{ entity.name }}[]): any[] {
+        return entities.map(entity => this.toDTO(entity));
+    }
+}

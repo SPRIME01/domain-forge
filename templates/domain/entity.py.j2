@@ -1,0 +1,22 @@
+"""
+{{ entity.name }} entity model.
+
+This module defines the domain model for {{ entity.name }} in the {{ context.name }} bounded context.
+"""
+
+from typing import List, Optional
+from pydantic import BaseModel
+
+
+class {{ entity.name }}(BaseModel):
+    """
+    {{ entity.name }} domain entity.
+
+    This module defines the {{ entity.name }} entity and its related types.
+    """
+    {% for property in entity.properties %}
+    {{ property.name }}: {{ property.type }}{% if property.default_value %} = {{ property.default_value }}{% endif %}
+    {% endfor %}
+
+    class Config:
+        orm_mode = True
