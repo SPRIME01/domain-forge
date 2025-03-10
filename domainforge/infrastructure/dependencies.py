@@ -10,22 +10,30 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from ...application.use_cases.entity_use_case import EntityUseCase
-from ...domain.context.repositories.entity_repository import EntityRepository
-from ...application.services.entity_service import EntityService
+from ..application.use_cases.entity_use_case import EntityUseCase
+from ..domain.repositories.entity_repository import EntityRepository
+from ..application.services.entity_service import EntityService
 from .database import get_session
 from .repositories.entity_repository import SqlAlchemyEntityRepository
 
 
-def get_db() -> Generator[Session, None, None]:
+from fastapi import Request
+
+async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
     """
     Get a database session.
+
+    Args:
+        request: The FastAPI request object
 
     Returns:
         A database session generator
     """
-    # ...existing code...
-    yield  # Replace with actual session yielding
+    session = await get_session(request)
+    try:
+        yield session
+    finally:
+        await session.close()
 
 
 def get_entity_service(db: Session = Depends(get_db)) -> EntityService:
@@ -53,7 +61,9 @@ def get_entity_repository(db: Session = Depends(get_db)) -> EntityRepository:
         An instance of EntityRepository
     """
     # ...existing code...
-    return SqlAlchemyEntityRepository(db)  # Replace with actual repository instantiation
+    return SqlAlchemyEntityRepository(
+        db
+    )  # Replace with actual repository instantiation
 
 
 async def get_entity_use_case(

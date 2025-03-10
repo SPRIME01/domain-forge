@@ -1,8 +1,7 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { describe, test, expect, afterEach, vi } from 'vitest';
 import axios from 'axios';
 import ChatInterface from './ChatInterface';
-import { jest } from '@jest/globals';
 
 /**
  * Type definitions for Chat API responses
@@ -11,9 +10,14 @@ interface IChatResponse {
   messages: string[];
 }
 
-// Improve type safety for mocked axios
-jest.mock('axios');
-const mockedAxios = jest.mocked(axios, true);
+// Use Vitest's mocking functionality
+vi.mock('axios', () => ({
+  default: {
+    post: vi.fn()
+  }
+}));
+
+const mockedAxios = axios as unknown as { post: ReturnType<typeof vi.fn> };
 
 /**
  * Test suite for the ChatInterface component
@@ -23,7 +27,7 @@ describe('ChatInterface Component', () => {
   // Cleanup after each test
   afterEach(() => {
     cleanup();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('should render chat interface with initial empty state', () => {
@@ -116,8 +120,8 @@ describe('ChatInterface Component', () => {
     const networkError = new Error('Network Error');
     mockedAxios.post.mockRejectedValueOnce(networkError);
 
-    // Spy on console.error to verify it's called
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    // Update spy implementation
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(<ChatInterface />);
 

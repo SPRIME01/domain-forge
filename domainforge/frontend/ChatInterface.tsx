@@ -34,8 +34,9 @@ const ChatInterface: React.FC = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+          aria-label="message input"
         />
-        <button onClick={handleSend}>Send</button>
+        <button onClick={handleSend} aria-label="send">Send</button>
       </div>
     </div>
   );

@@ -36,7 +36,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./domainforge/test/setup.ts'],
+    setupFiles: ['./domainforge/frontend/test/setup.ts'],
+    include: ['**/*.{test,spec}.{ts,tsx}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
