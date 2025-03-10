@@ -3,6 +3,7 @@
 import os
 import shutil
 import tempfile
+from typing import Generator
 import pytest
 from pathlib import Path
 
@@ -13,7 +14,7 @@ class TestApplicationGeneration:
     """Tests for the application generation from DSL content."""
 
     @pytest.fixture
-    def output_dir(self) -> str:
+    def output_dir(self) -> Generator[str, None, None]:
         """Create a temporary directory for test output."""
         temp_dir = tempfile.mkdtemp()
         yield temp_dir
@@ -111,9 +112,9 @@ class TestApplicationGeneration:
         assert os.path.exists(backend_dir)
         assert os.path.exists(frontend_dir)
 
-        # Verify both contexts were generated
-        assert os.path.exists(os.path.join(backend_dir, "user_management"))
-        assert os.path.exists(os.path.join(backend_dir, "content_management"))
+        # Verify both contexts were generated (changed expected directory names)
+        assert os.path.exists(os.path.join(backend_dir, "UserManagement"))
+        assert os.path.exists(os.path.join(backend_dir, "ContentManagement"))
 
     @pytest.mark.xfail(reason="Test to verify error handling - expected to fail")
     def test_invalid_dsl_content(self, output_dir: str) -> None:

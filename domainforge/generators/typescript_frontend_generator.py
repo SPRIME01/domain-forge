@@ -5,6 +5,7 @@ This module generates TypeScript/React frontend code from domain models.
 """
 
 import logging
+import os
 from pathlib import Path
 
 from ..core.models import BoundedContext, DomainModel
@@ -18,14 +19,29 @@ class TypeScriptFrontendGenerator(BaseGenerator):
 
     def __init__(self, output_dir: str):
         """Initialize the TypeScript frontend generator."""
+        # Find the project root directory to locate the templates correctly
+        project_root = Path(__file__).parent.parent.parent
+        template_dirs = [
+            str(Path(__file__).parent.parent / "templates" / "typescript"),
+            str(project_root / "templates" / "typescript"),
+        ]
+
+        # Use the first template directory that exists
+        template_dir = next(
+            (dir_path for dir_path in template_dirs if Path(dir_path).exists()), None
+        )
+
         super().__init__(
             output_dir,
-            template_dir=str(Path(__file__).parent.parent / "templates" / "typescript"),
+            template_dir=template_dir,
         )
 
         # Create standard directories
         self.src_dir = self.output_dir / "src"
         self.src_dir.mkdir(parents=True, exist_ok=True)
+
+        # Store domain model for template rendering
+        self.model = None
 
     def generate(self, model: DomainModel) -> None:
         """
@@ -34,6 +50,9 @@ class TypeScriptFrontendGenerator(BaseGenerator):
         Args:
             model: The domain model to generate code from
         """
+        # Store the model for template rendering
+        self.model = model
+
         super().generate(model)
 
         # Generate shared/common code
@@ -213,16 +232,29 @@ class TypeScriptFrontendGenerator(BaseGenerator):
 
     def _generate_common_files(self) -> None:
         """Generate common files for the frontend application."""
+        if not self.model:
+            raise ValueError("Domain model not set. Call generate() first.")
+
         # Generate main app files
-        self.render_template("app/App.tsx.j2", {}, self.src_dir / "App.tsx")
-        self.render_template("app/main.tsx.j2", {}, self.src_dir / "main.tsx")
-        self.render_template("app/vite-env.d.ts.j2", {}, self.src_dir / "vite-env.d.ts")
+        self.render_template(
+            "app/App.tsx.j2", {"model": self.model}, self.src_dir / "App.tsx"
+        )
+        self.render_template(
+            "app/main.tsx.j2", {"model": self.model}, self.src_dir / "main.tsx"
+        )
+        self.render_template(
+            "app/vite-env.d.ts.j2",
+            {"model": self.model},
+            self.src_dir / "vite-env.d.ts",
+        )
 
         # Generate common utilities
         utils_dir = self.src_dir / "utils"
         utils_dir.mkdir(exist_ok=True)
         self.render_template(
-            "utils/http-client.ts.j2", {}, utils_dir / "http-client.ts"
+            "utils/http-client.ts.j2",
+            {"model": self.model},
+            utils_dir / "http-client.ts",
         )
 
     def _copy_config_files(self) -> None:
@@ -292,6 +324,7 @@ export default defineConfig({
             file_path = self.output_dir / filename
             if isinstance(content, dict):
                 import json
+
                 json_content = json.dumps(content, indent=2)
                 with open(file_path, "w") as f:
                     f.write(json_content)

@@ -1,0 +1,61 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { MantineProvider, createTheme, AppShell, Header, Navbar, Text } from '@mantine/core';
+
+// Import generated components for each bounded context
+{% for context in model.contexts %}
+// {{ context.name }} Context UI components
+{% for entity in context.entities %}
+import {{ entity.name }}List from './{{ context.name | lower }}/ui/pages/{{ entity.name | lower }}-list';
+import {{ entity.name }}Detail from './{{ context.name | lower }}/ui/pages/{{ entity.name | lower }}-detail';
+import {{ entity.name }}Edit from './{{ context.name | lower }}/ui/pages/{{ entity.name | lower }}-edit';
+{% endfor %}
+{% endfor %}
+
+const theme = createTheme({
+  primaryColor: 'blue',
+});
+
+export function App() {
+  return (
+    <MantineProvider theme={theme}>
+      <Router>
+        <AppShell
+          header={% raw %}{{ height: 60 }}{% endraw %}
+          navbar={% raw %}{{ width: 250, breakpoint: 'sm' }}{% endraw %}
+          padding="md"
+        >
+          <AppShell.Header>
+            <Header height={60} p="xs">
+              <Text size="lg">DomainForge Application</Text>
+            </Header>
+          </AppShell.Header>
+
+          <AppShell.Navbar p="md">
+            <Navbar.Section>
+              <Text>Navigation</Text>
+              {/* Navigation links would go here */}
+            </Navbar.Section>
+          </AppShell.Navbar>
+
+          <AppShell.Main>
+            <Routes>
+              {/* Generate routes for each entity in each context */}
+              {% for context in model.contexts %}
+              {% for entity in context.entities %}
+              <Route path="/{{ context.name | lower }}/{{ entity.name | lower }}" element={% raw %}{{<{{ entity.name }}List />}}{% endraw %} />
+              <Route path="/{{ context.name | lower }}/{{ entity.name | lower }}/:id" element={% raw %}{{<{{ entity.name }}Detail />}}{% endraw %} />
+              <Route path="/{{ context.name | lower }}/{{ entity.name | lower }}/:id/edit" element={% raw %}{{<{{ entity.name }}Edit />}}{% endraw %} />
+              <Route path="/{{ context.name | lower }}/{{ entity.name | lower }}/new" element={% raw %}{{<{{ entity.name }}Edit />}}{% endraw %} />
+              {% endfor %}
+              {% endfor %}
+              <Route path="/" element={% raw %}{{<div>Welcome to the application</div>}}{% endraw %} />
+            </Routes>
+          </AppShell.Main>
+        </AppShell>
+      </Router>
+    </MantineProvider>
+  );
+}
+
+export default App;
