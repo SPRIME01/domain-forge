@@ -24,7 +24,7 @@ The DomainForge DSL grammar is defined using Lark. The grammar supports the foll
 * API Endpoints: Defined as `api: METHOD "/path"`
 * UI Components: Defined as `ui: ComponentType`
 
-### Grammar (domainforge.lark)
+### domainforge.lark
 
 ```lark
 %import common.WS
