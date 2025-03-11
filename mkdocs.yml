@@ -1,0 +1,81 @@
+site_name: DomainForge Documentation
+theme:
+  name: material
+  palette:
+    scheme: slate
+    primary: indigo
+    accent: deep purple
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          selection:
+            docstring_style: google
+          rendering:
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+            show_category_heading: true
+            members_order: source
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - System Overview: architecture-specification.md
+    - Container Diagram: container-diagram.md
+    - System Context: system-context-diagram.md
+  - DSL Reference:
+    - Specification: dsl-specification.md
+  - API Documentation:
+    - Backend API: api/backend.md
+    - Frontend API: api/frontend.md
+    - Reference:
+      - api/SUMMARY.md
+      - Core:
+        - api/domainforge/core/ai_client.md
+        - api/domainforge/core/code_generation.md
+        - api/domainforge/core/interpreter.md
+        - api/domainforge/core/models.md
+        - api/domainforge/core/parser.md
+        - api/domainforge/core/transformer.md
+      - API:
+        - api/domainforge/api/models.md
+        - Controllers:
+          - api/domainforge/api/controllers/chat_controller.md
+          - api/domainforge/api/controllers/entity_controller.md
+      - Domain:
+        - Models:
+          - api/domainforge/domain/models/entity.md
+        - Repositories:
+          - api/domainforge/domain/repositories/entity_repository.md
+      - Infrastructure:
+        - api/domainforge/infrastructure/app.md
+        - api/domainforge/infrastructure/database.md
+        - api/domainforge/infrastructure/dependencies.md
+        - api/domainforge/infrastructure/json_file_repository.md
+      - Generators:
+        - api/domainforge/generators/base_generator.md
+        - api/domainforge/generators/python_backend_generator.md
+        - api/domainforge/generators/typescript_frontend_generator.md
+  - UI Components:
+    - Component Library: ui/components.md
+  - Contributing: contributing.md
+  - Usage Guide: usage.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.tasklist:
+      custom_checkbox: true

@@ -1,0 +1,62 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'uv'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
+          cache: 'npm'
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          uv venv .venv
+
+      - name: Install Python dependencies
+        run: |
+          source .venv/bin/activate
+          uv pip install -e ".[docs]"
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Generate TypeDoc documentation
+        run: npm run docs:typedoc
+
+      - name: Build Storybook
+        run: npm run docs:storybook
+
+      - name: Generate API Reference
+        run: |
+          source .venv/bin/activate
+          python docs/gen_ref_pages.py
+
+      - name: Build MkDocs documentation
+        run: |
+          source .venv/bin/activate
+          mkdocs build
+
+      - name: Deploy documentation
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          force_orphan: true

@@ -8,7 +8,7 @@ a syntax tree that can be transformed into domain models.
 import os
 from pathlib import Path
 
-from lark import Lark
+from lark import Lark, Tree
 
 
 class DomainForgeParser:
@@ -16,7 +16,7 @@ class DomainForgeParser:
     Parser for the DomainForge DSL using the Lark parsing library.
     """
 
-    def __init__(self, grammar_file=None):
+    def __init__(self, grammar_file: str | None = None) -> None:
         """
         Initialize the parser with the grammar from the specified file or the default grammar.
 
@@ -37,7 +37,7 @@ class DomainForgeParser:
         # Initialize the Lark parser
         self.parser = Lark(grammar, start="start", parser="lalr")
 
-    def parse(self, text):
+    def parse(self, text: str) -> Tree:
         """
         Parse the input text according to the DomainForge grammar.
 
@@ -49,7 +49,7 @@ class DomainForgeParser:
         """
         return self.parser.parse(text)
 
-    def parse_file(self, file_path):
+    def parse_file(self, file_path: str) -> Tree:
         """
         Parse a DomainForge DSL file.
 

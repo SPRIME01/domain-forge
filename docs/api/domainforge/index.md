@@ -1,0 +1,3 @@
+# Module domainforge
+
+::: domainforge

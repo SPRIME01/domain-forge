@@ -1,0 +1,16 @@
+{
+  "entryPoints": ["./domainforge/frontend"],
+  "out": "docs/api/frontend",
+  "exclude": ["**/node_modules/**", "**/test/**", "**/*.test.tsx", "**/*.test.ts"],
+  "theme": "default",
+  "name": "DomainForge Frontend API Documentation",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "categoryOrder": ["Core", "UI Components", "State Management", "Utilities", "*"],
+  "readme": "none",
+  "plugin": ["typedoc-plugin-markdown"],
+  "hideGenerator": true
+}

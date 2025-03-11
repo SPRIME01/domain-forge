@@ -13,6 +13,8 @@ repos:
     hooks:
     -   id: ruff
         args: [--fix, --exit-non-zero-on-fix]
+        # Add pydocstyle rules for docstring checking
+        additional_dependencies: ["ruff-pydocstyle"]
     -   id: ruff-format
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
@@ -44,3 +46,11 @@ repos:
         -   typescript@5.3.3
         -   '@typescript-eslint/eslint-plugin@6.19.0'
         -   '@typescript-eslint/parser@6.19.0'
+        -   'eslint-plugin-jsdoc@48.0.0'  # Add JSDoc linting
+
+# Add a specific hook for docstring checking
+-   repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
+    -   id: pydocstyle
+        args: [--convention=google]

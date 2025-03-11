@@ -1,5 +1,5 @@
 """
-FastAPI application configuration.
+FastAPI application configuration and setup.
 
 This module sets up the FastAPI application with all necessary middleware,
 database connections, and route handlers.
@@ -10,6 +10,7 @@ from typing import AsyncGenerator  # added import
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from ..api.controllers.entity_controller import router as entity_router
@@ -58,11 +59,49 @@ def create_app() -> FastAPI:
 
     # Create FastAPI app
     app = FastAPI(
-        title="API",
-        description="API for bounded context",
-        version="1.0.0",
+        title="DomainForge API",
+        description="API for the DomainForge domain-driven design platform",
+        version="0.1.0",
+        docs_url="/api/docs",
+        redoc_url="/api/redoc",
+        openapi_url="/api/openapi.json",
         lifespan=lifespan,
     )
+
+    def custom_openapi():
+        if app.openapi_schema:
+            return app.openapi_schema
+
+        openapi_schema = get_openapi(
+            title="DomainForge API Documentation",
+            version="0.1.0",
+            description="Complete API documentation for DomainForge platform",
+            routes=app.routes,
+            tags=[
+                {
+                    "name": "Domain Model",
+                    "description": "Operations for managing domain models",
+                },
+                {
+                    "name": "Code Generation",
+                    "description": "Operations for generating code",
+                },
+                {
+                    "name": "Project Management",
+                    "description": "Operations for managing projects",
+                },
+            ],
+        )
+
+        # Custom documentation settings
+        openapi_schema["info"]["x-logo"] = {
+            "url": "https://your-domain/path-to-logo.png"
+        }
+
+        app.openapi_schema = openapi_schema
+        return app.openapi_schema
+
+    app.openapi = custom_openapi
 
     # Configure CORS
     app.add_middleware(
