@@ -1,0 +1,18 @@
+# Fetch all remote branches
+git fetch origin --prune
+
+# To restore/recreate a specific remote branch
+# Replace <branch-name> with your branch name
+git checkout -b <branch-name> origin/<branch-name>
+
+# If the remote branch is completely gone, you'll need to:
+# 1. Create the branch locally
+git checkout -b feature/my-branch
+# 2. Push it back to remote with --force
+git push -u origin feature/my-branch
+
+# To see all remote branches
+git branch -r
+
+# To see all branches (local and remote)
+git branch -a

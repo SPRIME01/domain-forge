@@ -3,16 +3,17 @@ Steps for code generation feature tests.
 
 This module contains step definitions for the code generation feature tests.
 """
+
 import os
 import ast
 from pytest_bdd import given, when, then
-from domainforge.core.code_generation import CodeGenerationContext
+from domainforge.core.code_generation import CodeGenerator
 
 
 @given("the code generation system is initialized")
 def initialize_code_generation_system(context) -> None:
     """Initialize the code generation system."""
-    context.code_gen_context = CodeGenerationContext()
+    context.code_gen_context = CodeGenerator()
     context.code_gen_context.initialize()
 
 
@@ -33,11 +34,13 @@ def specify_properties(context) -> None:
     """Specify properties for the domain entity."""
     properties = []
     for row in context.table:
-        properties.append({
-            "name": row["name"],
-            "type": row["type"],
-            "required": row["required"] == "yes"
-        })
+        properties.append(
+            {
+                "name": row["name"],
+                "type": row["type"],
+                "required": row["required"] == "yes",
+            }
+        )
     context.code_gen_context.properties = properties
 
 
@@ -45,7 +48,9 @@ def specify_properties(context) -> None:
 def verify_file_created(context, file_name: str) -> None:
     """Verify that a file is created."""
     output_dir = context.code_gen_context.output_dir
-    assert os.path.exists(os.path.join(output_dir, file_name)), f"File {file_name} not found in {output_dir}"
+    assert os.path.exists(os.path.join(output_dir, file_name)), (
+        f"File {file_name} not found in {output_dir}"
+    )
 
 
 @then('the file should contain a class "{class_name}"')
@@ -54,7 +59,11 @@ def verify_class_in_file(context, class_name: str) -> None:
     output_dir = context.code_gen_context.output_dir
     entity_file = None
     for f_name in os.listdir(output_dir):
-        if f_name.endswith(".py") and class_name.lower() in f_name.lower() and not f_name.startswith("test_"):
+        if (
+            f_name.endswith(".py")
+            and class_name.lower() in f_name.lower()
+            and not f_name.startswith("test_")
+        ):
             entity_file = f_name
             break
 
@@ -79,11 +88,17 @@ def verify_properties(context) -> None:
     code_gen_context = context.code_gen_context
     entity_file = None
     for f_name in os.listdir(code_gen_context.output_dir):
-        if f_name.endswith(".py") and code_gen_context.entity_name.lower() in f_name.lower() and not f_name.startswith("test_"):
+        if (
+            f_name.endswith(".py")
+            and code_gen_context.entity_name.lower() in f_name.lower()
+            and not f_name.startswith("test_")
+        ):
             entity_file = f_name
             break
 
-    assert entity_file is not None, f"Could not find file for entity {code_gen_context.entity_name}"
+    assert entity_file is not None, (
+        f"Could not find file for entity {code_gen_context.entity_name}"
+    )
 
     file_path = os.path.join(code_gen_context.output_dir, entity_file)
     with open(file_path, "r") as f:
@@ -95,7 +110,9 @@ def verify_properties(context) -> None:
         if isinstance(node, ast.ClassDef) and node.name == code_gen_context.entity_name:
             target_class = node
             break
-    assert target_class is not None, f"Class {code_gen_context.entity_name} not found in {entity_file}"
+    assert target_class is not None, (
+        f"Class {code_gen_context.entity_name} not found in {entity_file}"
+    )
 
     class_fields = set()
     for node in target_class.body:
@@ -104,4 +121,6 @@ def verify_properties(context) -> None:
 
     for prop in code_gen_context.properties:
         prop_name = prop["name"]
-        assert prop_name in class_fields, f"Property '{prop_name}' not found in class {code_gen_context.entity_name}"
+        assert prop_name in class_fields, (
+            f"Property '{prop_name}' not found in class {code_gen_context.entity_name}"
+        )

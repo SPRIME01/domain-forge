@@ -10,7 +10,7 @@ from pathlib import Path
 import os
 
 
-class CodeGenerationContext:
+class CodeGenerator:
     """Context for code generation operations."""
 
     def __init__(self) -> None:
