@@ -1,125 +1,171 @@
-# Documentation Standards
-
-## General Guidelines
-- All code must be documented with clear, concise comments
-- Documentation should explain "why" rather than "what"
-- Every module, class, and function must have a docstring
-- Use type hints meaningfully but avoid redundancy
-- Follow clean code principles:
-    - Single Responsibility Principle
-    - DRY (Don't Repeat Yourself)
-    - KISS (Keep It Simple, Stupid)
-    - YAGNI (You Aren't Gonna Need It)
-
-## Python Docstring Format
 # GitHub Copilot Custom Instructions
 
-## Code Generation Guidelines
+These instructions guide GitHub Copilot to generate code that adheres to best practices and architectural principles. In cases of conflict, these custom instructions take precedence over other guidelines.
 
-### General Best Practices
-- Generate code that strictly follows best practices
-- Focus on readability, maintainability, and testability
-- Follow consistent naming conventions throughout codebase
-- Create feature branches for each new feature using format: `feature/<feature-name>`
+---
 
-### Branch Management
-- Never work directly on main/master branch
-- Create new branch for each feature: `git checkout -b feature/<feature-name>`
-- Use kebab-case for feature names: `feature/user-authentication`
+## Core Principles
+
+- **Readability:** Write clear, concise, and understandable code
+- **DRY (Don't Repeat Yourself):** Extract common logic into reusable components
+- **KISS (Keep It Simple, Stupid):** Prioritize simplicity in design and implementation
+- **YAGNI (You Ain't Gonna Need It):** Avoid unnecessary functionality
+- **Composition Over Inheritance:** Build complex objects from smaller components
+- **SOLID Principles:**
+        - Single Responsibility (SRP): Each class has one purpose
+        - Open/Closed (OCP): Open for extension, closed for modification
+        - Liskov Substitution (LSP): Subtypes must be substitutable for base types
+        - Interface Segregation (ISP): Clients shouldn't depend on unused interfaces
+        - Dependency Inversion (DIP): Depend on abstractions, not implementations
+
+---
+
+## Code Style & Documentation
+
+- **Naming:** Use descriptive names for all code elements
+- **Formatting:** Follow language-specific style guidelines (e.g., PEP8 for Python)
+- **Interface-First Design:** Define clear contracts between components
+- **Dependency Injection:** Use constructor injection by default
+- **Abstractions:** Create interfaces for all major components
+- **Documentation:**
+        - Document interface contracts clearly
+        - Specify dependencies in docstrings
+        - Mandatory docstrings for modules, classes, and functions
+        - Comments explaining the "why" behind code decisions
+        - Meaningful type hints without redundancy
+        - Ensure consistency in documentation style
+- **Encapsulation:**
+        - Protect internal state with appropriate access modifiers
+        - Use private/protected attributes and methods where applicable
+        - Hide implementation details behind interfaces
+
+---
+
+## Plugin Architecture
+
+- Define clear plugin interfaces
+- Use dependency injection containers
+- Implement plugin discovery mechanisms
+- Support hot-reloading where applicable
+- Maintain backwards compatibility
+
+---
+
+## Function & Method Design
+
+- Keep functions small with a single responsibility
+- Minimize side effects and aim for pure functions
+- Use meaningful, limited parameters
+- Maintain consistent return types
+- Apply Command-Query Separation (CQS)
+
+---
+
+## Branch Management
+
+- Never work directly on main/master
+- Create feature branches: `git checkout -b feature/<feature-name>` using kebab-case
 - Keep features small and focused
-- Delete branches after merging
-- Use pull requests for code reviews and merging
-- Ensure all tests pass before merging
-- Use descriptive commit messages
-- Commit often with small, logical changes
+- Use pull requests for code reviews
+- Commit often with descriptive messages
 
-### Python Standards
-- Follow PEP8 standards with clear variable names
-- Use strict typing (mypy compatible)
-- Avoid using `Any` type unless absolutely necessary
-- Use `typing.Protocol` for interfaces by default
-- Only use ABC when Protocol cannot fulfill requirements
-- Use Pydantic for all data structures and validation
-- Implement async methods for performance
-- Follow Domain-Driven Design principles
-- Use message bus and ports & adapters patterns
-- Use `pyproject.toml` for project configuration
-- Use virtual environment with `uv`:
-        - Create venv: `uv venv .venv`
-        - Activate venv (Windows): `.venv\Scripts\activate`
-        - Activate venv (Unix): `source .venv/bin/activate`
-        - Always check/create/activate venv before operations
-- Use `uv` package manager for dependencies:
-        - Install packages: `uv pip install <package>`
-        - Add to pyproject.toml: `uv pip install --upgrade <package>`
-        - Run tests: `uv run pytest tests/  -v`
+---
 
-### TypeScript Standards
-- Follow ES6+ standards
-- Use strict type annotations
-- Implement modular design
-- Apply proper interfaces and patterns
+## Language-Specific Standards
 
-### Naming Conventions
-- Classes/Objects: Singular nouns (e.g., `Customer`)
-- Methods/Functions: Action verbs (e.g., `processPayment`)
-- Boolean Variables: Use "is", "has", "must" prefix
-- Other Variables: Clear, descriptive noun phrases
-- Constants: UPPERCASE with underscores
-- Private members: Start with underscore
-- Interfaces: Start with "I" (TypeScript)
-- Types: PascalCase (TypeScript)
+### Python
+- Follow PEP8 with strict typing (mypy compatible)
+- Use typing.protocol for interfaces except where abstract base classes are needed
+- Use context managers for resource management
+- Employ Pydantic for data structures and validation
+- Implement async methods where beneficial
+- Follow Domain-Driven Design principles with ports & adapters pattern
+- Configure with `pyproject.toml`
+- Virtual environment with `uv`:
+        - Create: `uv venv .venv`
+        - Activate (Windows): `.venv\Scripts\activate`
+        - Activate (Unix): `source .venv/bin/activate`
+- Manage dependencies with `uv pip`
+
+### TypeScript
+- Follow ES6+ with strict type annotations
+- Implement modular design with appropriate interfaces
+- Handle async errors properly
+- Test with Jest or Vitest according to project needs
+- Ensure compliance with language-specific best practices
+
+---
+
+## Testing
+
+- **Structure:** Follow AAA (Arrange, Act, Assert) pattern
+- **Types:** Write unit, integration, and BDD-style tests
+- **Practices:**
+        - Ensure test idempotence
+        - Mock external dependencies
+        - Prioritize meaningful tests over quantity
+        - Use descriptive test names
+        - Integrate tests in CI/CD pipelines
+
+---
 
 ## Production Readiness
 
-### Python Requirements
 - Comprehensive exception handling
-- Resource cleanup management
-- Testing with pytest, pytest-BDD, coverage, and mocks (`uv pip run pytest`)
-- Security checks and input validation
-- Package management with `uv`
-- Project configuration in `pyproject.toml`
+- Input validation and security checks
+- Resource cleanup
+- Testing with appropriate frameworks (pytest for Python, Jest for TypeScript)
 
-### TypeScript Requirements
-- Async error management
-- Input validation
-- CI/CD pipeline integration
-- Testing with Jest
+---
 
-### Special Code Blocks
+## Inline Commands & Special Code Blocks
+
+### Commands
+- Refactoring:
+        - Python: `# copilot: refactor`
+        - TypeScript: `// copilot: refactor`
+- Optimization:
+        - Python: `# copilot: optimize`
+        - TypeScript: `// copilot: optimize`
+
+### Code Blocks
 
 #### Performance Optimization
-Python:
 ```python
 # BEGIN PERFORMANCE OPTIMIZATION
 # END PERFORMANCE OPTIMIZATION
 ```
 
-TypeScript:
 ```typescript
 // BEGIN PERFORMANCE OPTIMIZATION
 // END PERFORMANCE OPTIMIZATION
 ```
 
 #### Security Checks
-Python:
 ```python
 # BEGIN SECURITY CHECKS
 # END SECURITY CHECKS
 ```
 
-TypeScript:
 ```typescript
 // BEGIN SECURITY CHECKS
 // END SECURITY CHECKS
 ```
 
-### Inline Commands
-- Refactor: `# copilot: refactor` (Python) or `// copilot: refactor` (TypeScript)
-- Optimize: `# copilot: optimize` (Python) or `// copilot: optimize` (TypeScript)
+---
 
-### Testing Approach
-- Follow Test-Driven Development (TDD)
-- Generate test stubs before implementation
-- Use pytest/pytest-BDD for Python (run with `uv pip run pytest`)
-- Use Jest for TypeScript
+## Architectural Patterns
+
+- Use established patterns (MVC, MVVM, Clean Architecture, Microservices)
+- Implement layered architecture for separation of concerns
+- For CSS, apply Block Element Modifier (BEM) naming
+
+---
+
+## Example Scenario Guidance
+
+- **Classes:** Prioritize SRP and encapsulation
+- **Functions:** Keep focused and free from side effects
+- **Tests:** Follow AAA pattern with clear assertions
+- **API Calls:** Handle error cases appropriately
+- **UI Components:** Ensure accessibility and follow styling guidelines
