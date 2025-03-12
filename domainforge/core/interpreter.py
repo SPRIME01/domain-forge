@@ -1,26 +1,20 @@
-"""
-Interpreter for the DomainForge DSL.
+"""Interpreter for the DomainForge DSL.
 
 This module coordinates the parsing and transformation of DSL files into
 domain models that can be used by code generators.
 """
 
+import os
 from pathlib import Path
-from typing import Dict, Union, List, Set, Any
+from typing import Dict, Union, List, Any
 
 from .models import DomainModel
 from .parser import DomainForgeParser
 from .transformer import DomainForgeTransformer
-from domainforge.generators.python_backend_generator import PythonBackendGenerator
-from domainforge.generators.typescript_frontend_generator import (
-    TypeScriptFrontendGenerator,
-)
-import os
 
 
 class DomainForgeInterpreter:
-    """
-    Main interpreter for the DomainForge DSL.
+    """Main interpreter for the DomainForge DSL.
 
     This class coordinates the parsing and transformation of DSL files into
     domain models that can be used by code generators.
@@ -32,18 +26,21 @@ class DomainForgeInterpreter:
         self.transformer = DomainForgeTransformer()
 
     def interpret(self, text: str) -> DomainModel:
-        """
-        Interpret DomainForge DSL text and return a domain model.
+        """Interpret DomainForge DSL text and return a domain model.
 
         Args:
+        ----
             text: The DSL text to interpret
 
         Returns:
+        -------
             A DomainModel instance representing the interpreted model
 
         Raises:
+        ------
             SyntaxError: If the DSL text contains syntax errors
             ValueError: If the model is semantically invalid
+
         """
         # Parse the text into a syntax tree
         tree = self.parser.parse(text)
@@ -57,19 +54,22 @@ class DomainForgeInterpreter:
         return model
 
     def interpret_file(self, file_path: Union[str, Path]) -> DomainModel:
-        """
-        Interpret a DomainForge DSL file and return a domain model.
+        """Interpret a DomainForge DSL file and return a domain model.
 
         Args:
+        ----
             file_path: Path to the DSL file to interpret
 
         Returns:
+        -------
             A DomainModel instance representing the interpreted model
 
         Raises:
+        ------
             FileNotFoundError: If the file doesn't exist
             SyntaxError: If the DSL file contains syntax errors
             ValueError: If the model is semantically invalid
+
         """
         # Read and parse the file
         with open(file_path) as f:
@@ -78,15 +78,17 @@ class DomainForgeInterpreter:
         return self.interpret(text)
 
     def export_model(self, model: DomainModel, output_path: Union[str, Path]) -> None:
-        """
-        Export a domain model to JSON format.
+        """Export a domain model to JSON format.
 
         Args:
+        ----
             model: The domain model to export
             output_path: Path where the JSON file should be written
 
         Raises:
+        ------
             IOError: If the file cannot be written
+
         """
         # Convert model to dict using Pydantic's json() method
         model_json = model.model_dump_json(indent=2)
@@ -96,17 +98,20 @@ class DomainForgeInterpreter:
             f.write(model_json)
 
     def _validate_model(self, model: DomainModel) -> None:
-        """
-        Validate a domain model for semantic correctness.
+        """Validate a domain model for semantic correctness.
 
         Args:
+        ----
             model: The domain model to validate
 
         Returns:
+        -------
             A list of validation error messages
 
         Raises:
+        ------
             ValueError: If the model is semantically invalid
+
         """
         errors: List[str] = []
 
@@ -120,12 +125,15 @@ class DomainForgeInterpreter:
             raise ValueError("Model validation failed:\n" + "\n".join(errors))
 
     def _validate_contexts(self, model: DomainModel, errors: List[str]) -> None:
-        """
-        Validate bounded contexts for semantic correctness.
+        """Validate bounded contexts for semantic correctness.
 
         Args:
-            model: The domain model to validate
-            errors: A list to collect validation error messages
+        ----
+            model: The domain model to validate. Contains all bounded contexts
+                  and their components to be checked for naming conflicts.
+            errors: A mutable list that will be populated with validation error
+                   messages if any semantic issues are found.
+
         """
         defined_names: Dict[str, str] = {}
 
@@ -168,12 +176,15 @@ class DomainForgeInterpreter:
                 defined_names[repo.name] = "repository"
 
     def _validate_entities(self, model: DomainModel, errors: List[str]) -> None:
-        """
-        Validate entities for semantic correctness.
+        """Validate entities for semantic correctness.
 
         Args:
-            model: The domain model to validate
-            errors: A list to collect validation error messages
+        ----
+            model: The domain model to validate. Contains all entities and their
+                  relationships to be checked for validity.
+            errors: A mutable list that will be populated with validation error
+                   messages if any semantic issues are found with the entities.
+
         """
         # Initialize defined_names dictionary for the scope
         defined_names: Dict[str, str] = {}
@@ -242,6 +253,11 @@ class DomainModelBuilder:
     """Constructs a domain model from conversation insights."""
 
     def __init__(self) -> None:
+        """Initialize the domain model builder.
+
+        Creates an empty builder instance ready to construct a domain model
+        through incremental additions of entities and relationships.
+        """
         self.entities = {}
         self.relationships = []
 
@@ -264,6 +280,15 @@ class DomainModelBuilder:
 
 class DomainForgeDSLGenerator:
     """Generates DomainForge DSL from structured domain model."""
+
+    def __init__(self) -> None:
+        """Initialize the DSL generator.
+
+        Creates a new instance of the DSL generator that can convert
+        structured domain models into DomainForge DSL text format.
+        """
+        self.entities = {}
+        self.relationships = []
 
     def generate_dsl(self, domain_model: Dict[str, Any]) -> str:
         """Convert structured domain model to DSL text."""
@@ -290,13 +315,10 @@ class DomainForgeDSLGenerator:
 
 
 def generate_application(dsl_content: str, output_dir: str) -> None:
-    """
-    Generate the application structure based on DSL content.
+    """Generate the application structure based on DSL content.
     Reason: Ensure that both simple and complex DSL content produce the expected folder structure
             with correct file permissions.
     """
-    import os
-
     # Create backend and frontend directories
     backend_dir = os.path.join(output_dir, "backend")
     frontend_dir = os.path.join(output_dir, "frontend")

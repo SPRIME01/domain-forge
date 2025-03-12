@@ -5,10 +5,10 @@ This document provides an overview of the database container using the C4 model.
 ## Diagram Description
 
 - **Components**:
-    - *Database*: Stores application data.
-    - *Tables*: Organizes data into rows and columns.
-    - *Indexes*: Optimizes data retrieval.
-    - *Views*: Provides a virtual table based on the result-set of a query.
+  - _Database_: Stores application data.
+  - _Tables_: Organizes data into rows and columns.
+  - _Indexes_: Optimizes data retrieval.
+  - _Views_: Provides a virtual table based on the result-set of a query.
 
 ## C4 Component Diagram (PlantUML)
 

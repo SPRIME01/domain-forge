@@ -13,7 +13,7 @@ interface DomainModelVisualizerProps {
   model: DomainModel;
   onEntityClick?: (entityId: string) => void;
   onRelationshipClick?: (relationshipId: string) => void;
-  layout?: 'force' | 'hierarchical' | 'circular';
+  layout?: "force" | "hierarchical" | "circular";
   theme?: VisualizerTheme;
 }
 
@@ -45,19 +45,14 @@ const EntityForm: React.FC<EntityFormProps>;
 ### Example Usage
 
 ```tsx
-import { EntityForm } from '@domainforge/ui';
+import { EntityForm } from "@domainforge/ui";
 
 const MyComponent = () => {
-  const handleSubmit = (data) => {
+  const handleSubmit = data => {
     // Handle form submission
   };
 
-  return (
-    <EntityForm
-      onSubmit={handleSubmit}
-      initialData={existingEntity}
-    />
-  );
+  return <EntityForm onSubmit={handleSubmit} initialData={existingEntity} />;
 };
 ```
 

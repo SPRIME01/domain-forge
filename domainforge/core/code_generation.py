@@ -1,12 +1,10 @@
-"""
-Module for code generation operations.
+"""Module for code generation operations.
 
 This module provides functionality for generating code based on domain models
 and specifications.
 """
 
-from typing import Any, Dict, List, Optional
-from pathlib import Path
+from typing import Any, Dict, List
 import os
 
 
@@ -34,10 +32,13 @@ class CodeGenerator:
         """Generate code based on the given input data.
 
         Args:
+        ----
             input_data: Dictionary containing the code generation parameters
 
         Returns:
+        -------
             str: The generated code as a string
+
         """
         # Basic implementation for now
         template = f'''

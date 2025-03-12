@@ -5,20 +5,24 @@ This document provides an overview of the container diagram for the project usin
 ## Diagram Description
 
 - **People and Roles**:
-    - *User*: A user interacting with the system.
+
+  - _User_: A user interacting with the system.
 
 - **Containers**:
-    - **Frontend**:
-        - User interface for interacting with the application.
-        - Technologies: TypeScript/React.
 
-    - **Backend**:
-        - Handles business logic, API endpoints, and data processing.
-        - Technologies: Python/FastAPI.
+  - **Frontend**:
 
-    - **Database**:
-        - Stores application data.
-        - Technologies: SQLite.
+    - User interface for interacting with the application.
+    - Technologies: TypeScript/React.
+
+  - **Backend**:
+
+    - Handles business logic, API endpoints, and data processing.
+    - Technologies: Python/FastAPI.
+
+  - **Database**:
+    - Stores application data.
+    - Technologies: SQLite.
 
 ## C4 Container Diagram (PlantUML)
 

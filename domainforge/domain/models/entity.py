@@ -1,17 +1,15 @@
-"""
-Entity model.
+"""Entity model.
 
 This module defines the core Entity domain model.
 """
 
 from pydantic import BaseModel, Field
 from typing import Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 
 class Entity(BaseModel):
-    """
-    Core domain model representing an entity.
+    """Core domain model representing an entity.
 
     This is a base model for domain entities following DDD principles.
     """

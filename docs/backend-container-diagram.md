@@ -5,10 +5,10 @@ This document provides an overview of the backend container using the C4 model. 
 ## Diagram Description
 
 - **Components**:
-    - *API Controller*: Handles incoming HTTP requests and routes them to the appropriate service.
-    - *Service Layer*: Contains business logic and orchestrates interactions between repositories and other services.
-    - *Repository Layer*: Manages data access and persistence.
-    - *Domain Model*: Represents the core business entities and logic.
+  - _API Controller_: Handles incoming HTTP requests and routes them to the appropriate service.
+  - _Service Layer_: Contains business logic and orchestrates interactions between repositories and other services.
+  - _Repository Layer_: Manages data access and persistence.
+  - _Domain Model_: Represents the core business entities and logic.
 
 ## C4 Component Diagram (PlantUML)
 

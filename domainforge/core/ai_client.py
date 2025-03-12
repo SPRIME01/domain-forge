@@ -1,5 +1,4 @@
-"""
-AI client integration for domain model elicitation.
+"""AI client integration for domain model elicitation.
 
 This module provides integration with OpenAI-compatible API services for
 the AI assistant feature.
@@ -9,7 +8,7 @@ import os
 import json
 import inspect
 import unittest.mock
-from typing import List, Dict, Any, Optional, Union, cast
+from typing import List, Dict, Any, Optional, Union
 import httpx
 from pydantic import BaseModel
 
@@ -44,20 +43,22 @@ class AIResponse(BaseModel):
 
 
 class AIClient:
-    """
-    Client for interacting with OpenAI-compatible API services.
+    """Client for interacting with OpenAI-compatible API services.
 
     This client supports any API service that follows the OpenAI API format,
     including Azure OpenAI, local LLM servers, and other compatible providers.
     """
 
     def __init__(self, api_key: Optional[str] = None, api_base: Optional[str] = None):
-        """
-        Initialize the AI client with API credentials.
+        """Initialize the AI client with API credentials.
 
         Args:
-            api_key: OpenAI API key or compatible API key
-            api_base: Base URL for the API (defaults to OpenAI API)
+        ----
+            api_key: Authentication key for the OpenAI API or compatible service. If not provided,
+                    will attempt to use OPENAI_API_KEY from settings or environment variables.
+            api_base: Base URL for the API endpoint. Defaults to OpenAI's API URL if not provided.
+                     Can be set to a different URL for Azure OpenAI or other compatible services.
+
         """
         settings = get_settings()
 
@@ -82,14 +83,16 @@ class AIClient:
         )
 
     def _is_mock_object(self, obj: Any) -> bool:
-        """
-        Check if an object is a mock object used in testing.
+        """Check if an object is a mock object used in testing.
 
         Args:
+        ----
             obj: Object to check
 
         Returns:
+        -------
             True if the object is a mock, False otherwise
+
         """
         if obj is None:
             return False
@@ -120,11 +123,12 @@ class AIClient:
         return False
 
     def _is_test_environment(self) -> bool:
-        """
-        Detect if code is running in a test environment.
+        """Detect if code is running in a test environment.
 
-        Returns:
+        Returns
+        -------
             True if in test environment, False otherwise
+
         """
         # Check if we're running under pytest
         for frame in inspect.stack():
@@ -148,21 +152,24 @@ class AIClient:
         temperature: float = 0.7,
         max_tokens: int = 2048,
     ) -> str:
-        """
-        Generate a response from the AI based on the conversation.
+        """Generate a response from the AI based on the conversation.
 
         Args:
+        ----
             conversation: Either an AIConversation object or a list of message dicts
             model: The AI model to use (defaults to settings or "gpt-4")
             temperature: Controls randomness (0.0-1.0, lower is more deterministic)
             max_tokens: Maximum tokens in the response
 
         Returns:
+        -------
             The AI's response text
 
         Raises:
+        ------
             ValueError: If the conversation format is invalid
             httpx.HTTPError: If the API request fails
+
         """
         # Early return if we're in a test environment
         if self._is_test_environment():
@@ -229,14 +236,16 @@ class AIClient:
             raise
 
     async def extract_domain_model(self, description: str) -> Dict[str, Any]:
-        """
-        Extract a structured domain model from a natural language description.
+        """Extract a structured domain model from a natural language description.
 
         Args:
+        ----
             description: Natural language description of the domain
 
         Returns:
+        -------
             A structured domain model representation
+
         """
         # Early return for test environments
         if self._is_test_environment():
@@ -305,15 +314,17 @@ class AIClient:
     async def refine_domain_model(
         self, current_model: Dict[str, Any], user_feedback: str
     ) -> Dict[str, Any]:
-        """
-        Refine an existing domain model based on user feedback.
+        """Refine an existing domain model based on user feedback.
 
         Args:
+        ----
             current_model: The current domain model
             user_feedback: User feedback for refinement
 
         Returns:
+        -------
             The refined domain model
+
         """
         # Early return for test environments
         if self._is_test_environment():

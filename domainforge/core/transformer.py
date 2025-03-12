@@ -1,5 +1,4 @@
-"""
-Transformer for converting parse trees to domain models.
+"""Transformer for converting parse trees to domain models.
 
 This module transforms the Lark parse tree into domain model objects that can be
 used by the code generators.
@@ -29,9 +28,7 @@ from .models import (
 
 
 class DomainForgeTransformer(Transformer):
-    """
-    Transformer for converting Lark parse trees ito domain model objects.
-    """
+    """Transformer for converting Lark parse trees ito domain model objects."""
 
     def transform(self, tree: Union[Tree, List]) -> DomainModel:
         """Transform the parse tree into a domain model."""
@@ -891,4 +888,3 @@ class DomainForgeTransformer(Transformer):
         """Ensure it always returns a string."""
         some_value: Optional[str] = None  # Example value
         return some_value or ""  # Ensure it always returns a string
-

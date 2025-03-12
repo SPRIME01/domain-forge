@@ -1,5 +1,4 @@
-"""
-Application settings.
+"""Application settings.
 
 This module provides configuration settings loaded from environment variables.
 """
@@ -48,10 +47,11 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """
-    Get application settings.
+    """Get application settings.
 
-    Returns:
+    Returns
+    -------
         Application settings instance
+
     """
     return Settings()

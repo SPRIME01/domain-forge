@@ -1,10 +1,8 @@
-"""
-Configuration and fixtures for pytest.
+"""Configuration and fixtures for pytest.
 
 This module contains shared fixtures and configuration for all test modules.
 """
 
-import os
 import sys
 import pytest
 from typing import Any, Dict, Generator, Optional

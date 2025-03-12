@@ -1,5 +1,4 @@
-"""
-Base generator class for code generation.
+"""Base generator class for code generation.
 
 This module provides the base generator class that implements common functionality
 for code generation, including template rendering and file system operations.
@@ -16,20 +15,22 @@ from ..core.models import BoundedContext, DomainModel
 
 
 class BaseGenerator(ABC):
-    """
-    Base class for code generators.
+    """Base class for code generators.
 
     This abstract class provides common functionality for code generation,
     including template loading, rendering, and file system operations.
     """
 
     def __init__(self, output_dir: str, template_dir: Optional[str | Path] = None):
-        """
-        Initialize the generator.
+        """Initialize the generator.
 
         Args:
-            output_dir: Directory where generated code will be written
-            template_dir: Directory containing template files (optional)
+        ----
+            output_dir: Directory where the generated code will be written. Will be
+                      created if it doesn't exist.
+            template_dir: Directory containing Jinja2 template files. If not provided,
+                        will search in standard template locations.
+
         """
         self.output_dir = Path(output_dir)
 
@@ -61,11 +62,13 @@ class BaseGenerator(ABC):
         self._register_filters()
 
     def generate(self, model: DomainModel) -> None:
-        """
-        Generate code from a domain model.
+        """Generate code from a domain model.
 
         Args:
-            model: The domain model to generate code from
+        ----
+            model: The domain model to generate code from. Contains all bounded contexts
+                  and their components that will be used to generate the application code.
+
         """
         # Create output directory if it doesn't exist
         os.makedirs(self.output_dir, exist_ok=True)
@@ -76,11 +79,14 @@ class BaseGenerator(ABC):
 
     @abstractmethod
     def generate_context(self, context: BoundedContext) -> None:
-        """
-        Generate code for a bounded context.
+        """Generate code for a bounded context.
 
         Args:
-            context: The bounded context to generate code for
+        ----
+            context: The bounded context to generate code for. Contains the entities,
+                    value objects, and other domain components that will be used to
+                    generate the implementation for this context.
+
         """
         pass
 
@@ -91,14 +97,19 @@ class BaseGenerator(ABC):
         output_path: Path,
         mkdir: bool = True,
     ) -> None:
-        """
-        Render a template and write it to a file.
+        """Render a template and write it to a file.
 
         Args:
-            template_name: Name of the template file
-            context: Template context (variables)
-            output_path: Path where the rendered file should be written
-            mkdir: Whether to create parent directories (default: True)
+        ----
+            template_name: Name of the Jinja2 template file to render. Should be
+                         relative to one of the template search paths.
+            context: Dictionary of variables to pass to the template during rendering.
+                    These will be available in the template as {{ variable }}.
+            output_path: Path where the rendered file should be written. Parent
+                       directories will be created if mkdir is True.
+            mkdir: Whether to automatically create parent directories for the output
+                  file. Defaults to True.
+
         """
         # Get the template
         template = self.env.get_template(template_name)

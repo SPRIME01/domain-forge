@@ -54,6 +54,7 @@ domainforge assistant
 ```
 
 3. Describe your application domain to the AI, which will guide you through defining:
+
    - Bounded contexts
    - Entities and their properties
    - Relationships between entities
@@ -163,11 +164,13 @@ Options for 'assistant':
 DomainForge's AI assistant uses the OpenAI API or any compatible API service. Configure it using:
 
 1. Environment variables:
+
    - `OPENAI_API_KEY`: Your API key
    - `OPENAI_API_BASE`: Optional base URL for alternative providers
    - `OPENAI_MODEL`: Model to use (default: gpt-4)
 
 2. `.env` file in project root:
+
    ```
    OPENAI_API_KEY=your-api-key-here
    OPENAI_API_BASE=https://your-api-provider.com/v1  # Optional

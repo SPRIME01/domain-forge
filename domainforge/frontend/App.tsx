@@ -1,6 +1,6 @@
-import React from 'react';
-import ChatInterface from './ChatInterface';
-import DomainModelVisualizer from './DomainModelVisualizer';
+import React from "react";
+import ChatInterface from "./ChatInterface";
+import DomainModelVisualizer from "./DomainModelVisualizer";
 
 const App: React.FC = () => {
   return (

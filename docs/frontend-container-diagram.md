@@ -5,10 +5,10 @@ This document provides an overview of the frontend container using the C4 model.
 ## Diagram Description
 
 - **Components**:
-    - *AppShell*: The main layout component that provides navigation and consistent structure.
-    - *EntityForm*: A standardized way to create and edit entities.
-    - *EntityList*: Displays lists of entities with filtering and sorting capabilities.
-    - *EntityDetail*: Displays detailed entity information.
+  - _AppShell_: The main layout component that provides navigation and consistent structure.
+  - _EntityForm_: A standardized way to create and edit entities.
+  - _EntityList_: Displays lists of entities with filtering and sorting capabilities.
+  - _EntityDetail_: Displays detailed entity information.
 
 ## C4 Component Diagram (PlantUML)
 

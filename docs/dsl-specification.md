@@ -10,19 +10,19 @@ DomainForge DSL allows you to define your domain model in a clear, structured wa
 
 The DomainForge DSL grammar is defined using Lark. The grammar supports the following components:
 
-* Bounded Contexts: Represented with `@ContextName { ... }`
-* Entities: Represented with `#EntityName { ... }`
-* Value Objects: Represented with `%ValueObjectName { ... }`
-* Events: Represented with `^EventName { ... }`
-* Services: Represented with `>>ServiceName { ... }`
-* Repositories: Represented with `$RepositoryName { ... }`
-* Modules: Represented with `*ModuleName { ... }`
-* Roles: Represented with `&RoleName { ... }`
-* Relationships: Connected using various symbols like `=>`, `<->`, etc.
-* Properties: Defined as `name: Type [constraints]`
-* Methods: Defined as `methodName(parameters) { ... }`
-* API Endpoints: Defined as `api: METHOD "/path"`
-* UI Components: Defined as `ui: ComponentType`
+- Bounded Contexts: Represented with `@ContextName { ... }`
+- Entities: Represented with `#EntityName { ... }`
+- Value Objects: Represented with `%ValueObjectName { ... }`
+- Events: Represented with `^EventName { ... }`
+- Services: Represented with `>>ServiceName { ... }`
+- Repositories: Represented with `$RepositoryName { ... }`
+- Modules: Represented with `*ModuleName { ... }`
+- Roles: Represented with `&RoleName { ... }`
+- Relationships: Connected using various symbols like `=>`, `<->`, etc.
+- Properties: Defined as `name: Type [constraints]`
+- Methods: Defined as `methodName(parameters) { ... }`
+- API Endpoints: Defined as `api: METHOD "/path"`
+- UI Components: Defined as `ui: ComponentType`
 
 ### domainforge.lark
 

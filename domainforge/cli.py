@@ -1,5 +1,4 @@
-"""
-Command-line interface for DomainForge.
+"""Command-line interface for DomainForge.
 
 This module provides the command-line interface for the DomainForge tool.
 """
@@ -8,10 +7,9 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Optional, NoReturn, Any
+from typing import Optional, Any
 
 import click
-from typing_extensions import Literal
 
 from .core.interpreter import DomainForgeInterpreter
 from .generators.python_backend_generator import PythonBackendGenerator
@@ -73,8 +71,7 @@ def main(
     model_path: Optional[str],
     verbose: bool,
 ) -> None:
-    """
-    DomainForge - Generate full-stack applications from domain models.
+    """Domainforge - Generate full-stack applications from domain models.
 
     INPUT_FILE: Path to the .domainforge DSL file
     """
@@ -127,8 +124,8 @@ def main(
             frontend_dir: Path = output_path / "frontend"
             os.makedirs(frontend_dir, exist_ok=True)
 
-            frontend_generator: TypeScriptFrontendGenerator = TypeScriptFrontendGenerator(
-                output_dir=str(frontend_dir)
+            frontend_generator: TypeScriptFrontendGenerator = (
+                TypeScriptFrontendGenerator(output_dir=str(frontend_dir))
             )
             frontend_generator.generate(domain_model)
             logger.info(f"TypeScript frontend code generated at: {frontend_dir}")
@@ -155,13 +152,11 @@ def get_version() -> str:
 
 
 def debug_parse_tree(node: Any) -> dict:
-    """
-    Recursively builds a parse tree representation.
-    """
+    """Recursively builds a parse tree representation."""
     children = getattr(node, "children", [])
     return {
         "name": type(node).__name__,
-        "children": [debug_parse_tree(child) for child in children] if children else []
+        "children": [debug_parse_tree(child) for child in children] if children else [],
     }
 
 

@@ -1,5 +1,4 @@
-"""
-Entry point for the DomainForge package.
+"""Entry point for the DomainForge package.
 
 This module provides the entry point for the package when run directly.
 """

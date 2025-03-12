@@ -1,15 +1,14 @@
-"""
-Tests for infrastructure components.
+"""Tests for infrastructure components.
 
 This module contains tests for infrastructure components
 like repositories, adapters, and external integrations.
 """
+
 import pytest
 import os
 import json
 import tempfile
 from typing import Any, Dict, Generator, Optional
-from pathlib import Path
 
 
 class JsonFileRepository:
@@ -22,24 +21,24 @@ class JsonFileRepository:
     def _ensure_file_exists(self) -> None:
         """Ensure the repository file exists and is initialized."""
         if not os.path.exists(self.file_path) or os.path.getsize(self.file_path) == 0:
-            with open(self.file_path, 'w') as f:
+            with open(self.file_path, "w") as f:
                 json.dump({}, f)
 
     async def get(self, id: str) -> Optional[Dict[str, Any]]:
         """Get an entity by ID."""
-        with open(self.file_path, 'r') as f:
+        with open(self.file_path, "r") as f:
             data = json.load(f)
         return data.get(id)
 
     async def add(self, entity: Dict[str, Any]) -> str:
         """Add a new entity."""
         entity_id = entity["id"]
-        with open(self.file_path, 'r') as f:
+        with open(self.file_path, "r") as f:
             data = json.load(f)
 
         data[entity_id] = entity
 
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, "w") as f:
             json.dump(data, f)
 
         return entity_id
@@ -47,7 +46,7 @@ class JsonFileRepository:
     async def update(self, entity: Dict[str, Any]) -> None:
         """Update an existing entity."""
         entity_id = entity["id"]
-        with open(self.file_path, 'r') as f:
+        with open(self.file_path, "r") as f:
             data = json.load(f)
 
         if entity_id not in data:
@@ -55,23 +54,23 @@ class JsonFileRepository:
 
         data[entity_id] = entity
 
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, "w") as f:
             json.dump(data, f)
 
     async def remove(self, id: str) -> None:
         """Remove an entity by ID."""
-        with open(self.file_path, 'r') as f:
+        with open(self.file_path, "r") as f:
             data = json.load(f)
 
         if id in data:
             del data[id]
 
-        with open(self.file_path, 'w') as f:
+        with open(self.file_path, "w") as f:
             json.dump(data, f)
 
     async def list(self) -> list[Dict[str, Any]]:
         """List all entities."""
-        with open(self.file_path, 'r') as f:
+        with open(self.file_path, "r") as f:
             data = json.load(f)
         return list(data.values())
 
@@ -82,7 +81,7 @@ class TestJsonFileRepository:
     @pytest.fixture
     def repo_file(self) -> Generator[str, Any, None]:
         """Create a temporary file for the repository."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.json') as temp:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as temp:
             temp_path = temp.name
         yield temp_path
         # Clean up
@@ -97,7 +96,12 @@ class TestJsonFileRepository:
     @pytest.mark.asyncio
     async def test_add_entity(self, repository: JsonFileRepository) -> None:
         """Test adding an entity to the repository."""
-        entity = {"id": "1", "name": "Test Entity", "description": "Test description", "version": 1}
+        entity = {
+            "id": "1",
+            "name": "Test Entity",
+            "description": "Test description",
+            "version": 1,
+        }
         entity_id = await repository.add(entity)
         assert entity_id == "1"
 
@@ -109,7 +113,12 @@ class TestJsonFileRepository:
     @pytest.mark.asyncio
     async def test_update_entity(self, repository: JsonFileRepository) -> None:
         """Test updating an entity in the repository."""
-        entity = {"id": "1", "name": "Test Entity", "description": "Test description", "version": 1}
+        entity = {
+            "id": "1",
+            "name": "Test Entity",
+            "description": "Test description",
+            "version": 1,
+        }
         await repository.add(entity)
 
         # Update the entity
@@ -126,7 +135,12 @@ class TestJsonFileRepository:
     @pytest.mark.asyncio
     async def test_remove_entity(self, repository: JsonFileRepository) -> None:
         """Test removing an entity from the repository."""
-        entity = {"id": "1", "name": "Test Entity", "description": "Test description", "version": 1}
+        entity = {
+            "id": "1",
+            "name": "Test Entity",
+            "description": "Test description",
+            "version": 1,
+        }
         await repository.add(entity)
 
         # Remove the entity

@@ -4,27 +4,27 @@ import { resolve } from "path";
 const config: StorybookConfig = {
   stories: [
     "../domainforge/frontend/**/*.stories.@(js|jsx|ts|tsx)",
-    "../domainforge/frontend/**/*.mdx"
+    "../domainforge/frontend/**/*.mdx",
   ],
   addons: [
     "@storybook/addon-links",
     "@storybook/addon-essentials",
     "@storybook/addon-interactions",
-    "@storybook/addon-docs"
+    "@storybook/addon-docs",
   ],
   framework: {
     name: "@storybook/react-vite",
-    options: {}
+    options: {},
   },
   docs: {
     autodocs: "tag",
-    defaultName: "Documentation"
+    defaultName: "Documentation",
   },
   typescript: {
     reactDocgen: "react-docgen-typescript",
-    check: true
+    check: true,
   },
-  outputDir: resolve(__dirname, '../site/storybook')
+  outputDir: resolve(__dirname, "../site/storybook"),
 };
 
 export default config;

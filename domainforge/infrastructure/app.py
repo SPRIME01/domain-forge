@@ -1,5 +1,4 @@
-"""
-FastAPI application configuration and setup.
+"""FastAPI application configuration and setup.
 
 This module sets up the FastAPI application with all necessary middleware,
 database connections, and route handlers.
@@ -21,8 +20,7 @@ from .database import init_database
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """
-    Application lifespan manager.
+    """Application lifespan manager.
 
     This context manager handles startup and shutdown events for the application.
     """
@@ -48,11 +46,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 def create_app() -> FastAPI:
-    """
-    Create and configure the FastAPI application.
+    """Create and configure the FastAPI application.
 
-    Returns:
+    Returns
+    -------
         The configured FastAPI application
+
     """
     # Get configuration
     settings = get_settings()

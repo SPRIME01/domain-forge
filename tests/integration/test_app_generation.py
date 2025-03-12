@@ -5,7 +5,6 @@ import shutil
 import tempfile
 from typing import Generator
 import pytest
-from pathlib import Path
 
 from domainforge.core.interpreter import generate_application
 

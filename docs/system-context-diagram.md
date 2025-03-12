@@ -1,4 +1,4 @@
-```markdown
+````markdown
 # System Context Diagram
 
 This document describes the system context diagram for the Domain Forge project using PlantUML with C4 diagrams.
@@ -26,11 +26,16 @@ Rel(system, externalSystem, "Integrates with", "Fetches and sends data as requir
 
 @enduml
 ```
+````
 
 To generate the diagram, copy the above PlantUML code into a PlantUML-enabled environment or online editor like [PlantText](https://www.planttext.com/).
 
 This diagram provides a high-level overview of:
+
 - The primary actor (Administrator)
 - The core system (Domain Forge)
 - An important external system the core system interacts with
+
+```
+
 ```

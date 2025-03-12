@@ -1,6 +1,5 @@
 """Unit tests for the domain-specific language generator."""
 
-import pytest
 from typing import Dict, Any
 
 from domainforge.core.interpreter import DomainForgeDSLGenerator

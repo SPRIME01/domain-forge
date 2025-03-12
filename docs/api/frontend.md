@@ -6,9 +6,9 @@ This documentation covers the DomainForge frontend TypeScript libraries and Reac
 
 ```typescript
 interface Entity {
-    id: string;
-    name: string;
-    // ...other properties
+  id: string;
+  name: string;
+  // ...other properties
 }
 
 type EntityId = string;
@@ -18,9 +18,9 @@ type EntityId = string;
 
 ```typescript
 class EntityUseCase {
-    async createEntity(entity: Entity): Promise<void>;
-    async updateEntity(entity: Entity): Promise<void>;
-    async deleteEntity(id: EntityId): Promise<void>;
+  async createEntity(entity: Entity): Promise<void>;
+  async updateEntity(entity: Entity): Promise<void>;
+  async deleteEntity(id: EntityId): Promise<void>;
 }
 ```
 
@@ -28,17 +28,17 @@ class EntityUseCase {
 
 ```typescript
 class HttpClient {
-    async get<T>(url: string): Promise<T>;
-    async post<T>(url: string, data: any): Promise<T>;
-    async put<T>(url: string, data: any): Promise<T>;
-    async delete(url: string): Promise<void>;
+  async get<T>(url: string): Promise<T>;
+  async post<T>(url: string, data: any): Promise<T>;
+  async put<T>(url: string, data: any): Promise<T>;
+  async delete(url: string): Promise<void>;
 }
 
 class EntityApiClient {
-    async getEntity(id: EntityId): Promise<Entity>;
-    async createEntity(entity: Entity): Promise<Entity>;
-    async updateEntity(entity: Entity): Promise<Entity>;
-    async deleteEntity(id: EntityId): Promise<void>;
+  async getEntity(id: EntityId): Promise<Entity>;
+  async createEntity(entity: Entity): Promise<Entity>;
+  async updateEntity(entity: Entity): Promise<Entity>;
+  async deleteEntity(id: EntityId): Promise<void>;
 }
 ```
 
@@ -46,12 +46,12 @@ class EntityApiClient {
 
 ```typescript
 class EntityStore {
-    entities: Map<EntityId, Entity>;
+  entities: Map<EntityId, Entity>;
 
-    async load(id: EntityId): Promise<Entity>;
-    async create(entity: Entity): Promise<void>;
-    async update(entity: Entity): Promise<void>;
-    async delete(id: EntityId): Promise<void>;
+  async load(id: EntityId): Promise<Entity>;
+  async create(entity: Entity): Promise<void>;
+  async update(entity: Entity): Promise<void>;
+  async delete(id: EntityId): Promise<void>;
 }
 ```
 

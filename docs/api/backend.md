@@ -69,9 +69,9 @@ Generates code from a domain model.
 ### Entity Management
 
 ::: domainforge.api.controllers.entity_controller
-    options:
-      show_root_heading: true
-      heading_level: 3
+options:
+show_root_heading: true
+heading_level: 3
 
 ## WebSocket API
 

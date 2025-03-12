@@ -1,11 +1,9 @@
-"""
-TypeScript frontend code generator.
+"""TypeScript frontend code generator.
 
 This module generates TypeScript/React frontend code from domain models.
 """
 
 import logging
-import os
 from pathlib import Path
 
 from ..core.models import BoundedContext, DomainModel
@@ -44,11 +42,14 @@ class TypeScriptFrontendGenerator(BaseGenerator):
         self.model = None
 
     def generate(self, model: DomainModel) -> None:
-        """
-        Generate code from a domain model.
+        """Generate code from a domain model.
 
         Args:
-            model: The domain model to generate code from
+        ----
+            model: The domain model to generate code from. Contains all bounded contexts,
+                  entities, and their relationships that will be used to generate the
+                  TypeScript/React frontend application structure.
+
         """
         # Store the model for template rendering
         self.model = model
@@ -62,11 +63,14 @@ class TypeScriptFrontendGenerator(BaseGenerator):
         self._copy_config_files()
 
     def generate_context(self, context: BoundedContext) -> None:
-        """
-        Generate code for a bounded context.
+        """Generate code for a bounded context.
 
         Args:
-            context: The bounded context to generate code for
+        ----
+            context: The bounded context to generate code for. Contains the entities,
+                    value objects, and relationships that will be used to generate
+                    the TypeScript implementation of this specific domain context.
+
         """
         logger.info(f"Generating TypeScript code for bounded context: {context.name}")
 

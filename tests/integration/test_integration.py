@@ -1,12 +1,9 @@
-"""
-Integration tests combining repository, service, and domain behavior.
-"""
+"""Integration tests combining repository, service, and domain behavior."""
 
 import os
 import tempfile
 import pytest
 import pytest_asyncio
-import asyncio
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
 import uuid

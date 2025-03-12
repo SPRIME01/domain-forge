@@ -1,12 +1,11 @@
-"""
-Tests for application services.
+"""Tests for application services.
 
 This module contains tests for the application service layer,
 which orchestrates domain operations and transactions.
 """
+
 import pytest
 from typing import Any, Dict
-import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -45,7 +44,7 @@ class EntityService:
             id=entity_id,
             name=entity_data.get("name", existing_entity.name),
             description=entity_data.get("description", existing_entity.description),
-            version=existing_entity.version + 1
+            version=existing_entity.version + 1,
         )
 
         await self.repository.update(updated_entity)
@@ -63,7 +62,9 @@ class TestEntityService:
     """Tests for the entity service."""
 
     @pytest.mark.asyncio
-    async def test_create_entity(self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]) -> None:
+    async def test_create_entity(
+        self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]
+    ) -> None:
         """Test creating a new entity."""
         service = EntityService(mock_repository)
 
@@ -78,7 +79,9 @@ class TestEntityService:
         assert entity.name == sample_domain_entity_data["name"]
 
     @pytest.mark.asyncio
-    async def test_get_entity(self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]) -> None:
+    async def test_get_entity(
+        self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]
+    ) -> None:
         """Test retrieving an entity by ID."""
         service = EntityService(mock_repository)
         await service.create_entity(sample_domain_entity_data)
@@ -90,7 +93,9 @@ class TestEntityService:
         assert mock_repository.called_methods["get"] == 1
 
     @pytest.mark.asyncio
-    async def test_update_entity(self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]) -> None:
+    async def test_update_entity(
+        self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]
+    ) -> None:
         """Test updating an existing entity."""
         service = EntityService(mock_repository)
         await service.create_entity(sample_domain_entity_data)
@@ -106,7 +111,9 @@ class TestEntityService:
         assert mock_repository.called_methods["update"] == 1
 
     @pytest.mark.asyncio
-    async def test_delete_entity(self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]) -> None:
+    async def test_delete_entity(
+        self, mock_repository: Any, sample_domain_entity_data: Dict[str, Any]
+    ) -> None:
         """Test deleting an entity."""
         service = EntityService(mock_repository)
         await service.create_entity(sample_domain_entity_data)

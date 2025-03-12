@@ -1,5 +1,4 @@
-"""
-Steps for code generation feature tests.
+"""Steps for code generation feature tests.
 
 This module contains step definitions for the code generation feature tests.
 """
@@ -48,9 +47,9 @@ def specify_properties(context) -> None:
 def verify_file_created(context, file_name: str) -> None:
     """Verify that a file is created."""
     output_dir = context.code_gen_context.output_dir
-    assert os.path.exists(os.path.join(output_dir, file_name)), (
-        f"File {file_name} not found in {output_dir}"
-    )
+    assert os.path.exists(
+        os.path.join(output_dir, file_name)
+    ), f"File {file_name} not found in {output_dir}"
 
 
 @then('the file should contain a class "{class_name}"')
@@ -96,9 +95,9 @@ def verify_properties(context) -> None:
             entity_file = f_name
             break
 
-    assert entity_file is not None, (
-        f"Could not find file for entity {code_gen_context.entity_name}"
-    )
+    assert (
+        entity_file is not None
+    ), f"Could not find file for entity {code_gen_context.entity_name}"
 
     file_path = os.path.join(code_gen_context.output_dir, entity_file)
     with open(file_path, "r") as f:
@@ -110,9 +109,9 @@ def verify_properties(context) -> None:
         if isinstance(node, ast.ClassDef) and node.name == code_gen_context.entity_name:
             target_class = node
             break
-    assert target_class is not None, (
-        f"Class {code_gen_context.entity_name} not found in {entity_file}"
-    )
+    assert (
+        target_class is not None
+    ), f"Class {code_gen_context.entity_name} not found in {entity_file}"
 
     class_fields = set()
     for node in target_class.body:
@@ -121,6 +120,6 @@ def verify_properties(context) -> None:
 
     for prop in code_gen_context.properties:
         prop_name = prop["name"]
-        assert prop_name in class_fields, (
-            f"Property '{prop_name}' not found in class {code_gen_context.entity_name}"
-        )
+        assert (
+            prop_name in class_fields
+        ), f"Property '{prop_name}' not found in class {code_gen_context.entity_name}"

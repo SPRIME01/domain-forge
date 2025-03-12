@@ -1,5 +1,4 @@
-"""
-Domain models for the DomainForge parser.
+"""Domain models for the DomainForge parser.
 
 These models represent the parsed structure of a domain model specification
 and are used to generate code for both backend and frontend applications.
@@ -11,9 +10,7 @@ from pydantic import BaseModel, Field
 
 
 class Parameter(BaseModel):
-    """
-    Represents a parameter in a method signature or API endpoint.
-    """
+    """Represents a parameter in a method signature or API endpoint."""
 
     name: str
     type: str
@@ -21,9 +18,7 @@ class Parameter(BaseModel):
 
 
 class Property(BaseModel):
-    """
-    Represents a property/attribute of an entity, value object, etc.
-    """
+    """Represents a property/attribute of an entity, value object, etc."""
 
     name: str
     type: str
@@ -32,9 +27,7 @@ class Property(BaseModel):
 
 
 class Method(BaseModel):
-    """
-    Represents a method/function in an entity or service.
-    """
+    """Represents a method/function in an entity or service."""
 
     name: str
     visibility: str = "public"
@@ -44,9 +37,7 @@ class Method(BaseModel):
 
 
 class ApiEndpoint(BaseModel):
-    """
-    Represents a REST API endpoint definition.
-    """
+    """Represents a REST API endpoint definition."""
 
     http_method: str
     path: str
@@ -56,9 +47,7 @@ class ApiEndpoint(BaseModel):
 
 
 class UiComponent(BaseModel):
-    """
-    Represents a UI component definition.
-    """
+    """Represents a UI component definition."""
 
     component_type: str
     parameters: List[Parameter] = Field(default_factory=list)
@@ -66,9 +55,7 @@ class UiComponent(BaseModel):
 
 
 class Relationship(BaseModel):
-    """
-    Represents a relationship between entities.
-    """
+    """Represents a relationship between entities."""
 
     source_entity: str
     target_entity: str
@@ -77,9 +64,7 @@ class Relationship(BaseModel):
 
 
 class Entity(BaseModel):
-    """
-    Represents a domain entity (aggregate root).
-    """
+    """Represents a domain entity (aggregate root)."""
 
     name: str
     parent: Optional[str] = None
@@ -92,27 +77,21 @@ class Entity(BaseModel):
 
 
 class ValueObject(BaseModel):
-    """
-    Represents a value object in the domain.
-    """
+    """Represents a value object in the domain."""
 
     name: str
     properties: List[Property] = Field(default_factory=list)
 
 
 class Event(BaseModel):
-    """
-    Represents a domain event.
-    """
+    """Represents a domain event."""
 
     name: str
     properties: List[Property] = Field(default_factory=list)
 
 
 class Service(BaseModel):
-    """
-    Represents a domain service.
-    """
+    """Represents a domain service."""
 
     name: str
     methods: List[Method] = Field(default_factory=list)
@@ -120,27 +99,21 @@ class Service(BaseModel):
 
 
 class Repository(BaseModel):
-    """
-    Represents a repository for accessing entities.
-    """
+    """Represents a repository for accessing entities."""
 
     name: str
     methods: List[Method] = Field(default_factory=list)
 
 
 class Role(BaseModel):
-    """
-    Represents a role or actor in the domain.
-    """
+    """Represents a role or actor in the domain."""
 
     name: str
     properties: List[Property] = Field(default_factory=list)
 
 
 class Module(BaseModel):
-    """
-    Represents a module or package in the domain.
-    """
+    """Represents a module or package in the domain."""
 
     name: str
     entities: List[Entity] = Field(default_factory=list)
@@ -151,9 +124,7 @@ class Module(BaseModel):
 
 
 class BoundedContext(BaseModel):
-    """
-    Represents a bounded context in the domain.
-    """
+    """Represents a bounded context in the domain."""
 
     name: str
     entities: List[Entity] = Field(default_factory=list)
@@ -166,8 +137,6 @@ class BoundedContext(BaseModel):
 
 
 class DomainModel(BaseModel):
-    """
-    Represents the complete domain model.
-    """
+    """Represents the complete domain model."""
 
     bounded_contexts: List[BoundedContext] = Field(default_factory=list)

@@ -1,5 +1,4 @@
-"""
-Chat API controller for AI assistant interaction.
+"""Chat API controller for AI assistant interaction.
 
 This module provides endpoints for interacting with the AI assistant
 for domain model elicitation.
@@ -7,12 +6,12 @@ for domain model elicitation.
 
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel, Field, ValidationError
-from typing import List, Dict, Any, Optional, cast
+from typing import List, Dict, Any, Optional
 import json
 import re
 
 from domainforge.core.ai_client import AIClient
-from domainforge.core.interpreter import DomainElicitationSession, DomainModelBuilder
+from domainforge.core.interpreter import DomainElicitationSession
 from domainforge.config.settings import get_settings
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -64,11 +63,12 @@ class APIKeyResponse(BaseModel):
 
 
 async def get_ai_client() -> AIClient:
-    """
-    Dependency to get the AI client.
+    """Dependency to get the AI client.
 
-    Returns:
+    Returns
+    -------
         Configured AI client instance
+
     """
     settings = get_settings()
     return AIClient(api_key=settings.OPENAI_API_KEY, api_base=settings.OPENAI_API_BASE)
@@ -80,16 +80,18 @@ async def send_message(
     background_tasks: BackgroundTasks,
     ai_client: AIClient = Depends(get_ai_client),
 ) -> ChatResponse:
-    """
-    Handle incoming chat messages and return AI responses.
+    """Handle incoming chat messages and return AI responses.
 
     Args:
+    ----
         message: The message from the user
         background_tasks: FastAPI background tasks for async operations
         ai_client: The AI client dependency
 
     Returns:
+    -------
         Response containing AI messages and session information
+
     """
     # Validate that message is not empty
     if not message.content.strip():
@@ -160,14 +162,16 @@ async def send_message(
 
 @router.post("/api-key", response_model=APIKeyResponse)
 async def set_api_key(request: APIKeyRequest) -> APIKeyResponse:
-    """
-    Set or update the OpenAI API key.
+    """Set or update the OpenAI API key.
 
     Args:
+    ----
         request: API key request containing the key and optional base URL
 
     Returns:
+    -------
         Response indicating success or failure
+
     """
     try:
         # Check if we're in a test environment (api_key starting with "sk-valid" is considered valid in tests)
@@ -207,14 +211,16 @@ async def set_api_key(request: APIKeyRequest) -> APIKeyResponse:
 
 @router.get("/session/{session_id}", response_model=Dict[str, Any])
 async def get_domain_model(session_id: str) -> Dict[str, Any]:
-    """
-    Get the current domain model for a session.
+    """Get the current domain model for a session.
 
     Args:
+    ----
         session_id: ID of the session to retrieve
 
     Returns:
+    -------
         Current domain model or error if session doesn't exist
+
     """
     if session_id not in active_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -229,15 +235,16 @@ async def _process_message_for_domain_model(
     user_message: str,
     ai_response: str,
 ) -> None:
-    """
-    Process the chat message to extract or update domain model information.
+    """Process the chat message to extract or update domain model information.
     This runs in the background after sending the initial response.
 
     Args:
-        ai_client: The AI client for additional processing
-        session: The domain elicitation session
-        user_message: The user's message
-        ai_response: The AI's response
+    ----
+        ai_client: The AI client instance used for additional processing and model extraction.
+        session: The current domain elicitation session containing conversation history and model.
+        user_message: The original message received from the user to be processed.
+        ai_response: The AI's response to the user's message, for context in processing.
+
     """
     # Initialize domain_entities if not present to prevent errors in session continuity
     if not hasattr(session, "domain_entities"):
@@ -300,14 +307,16 @@ async def _process_message_for_domain_model(
 
 
 def _get_system_prompt_for_stage(stage: str) -> str:
-    """
-    Get the appropriate system prompt based on the current elicitation stage.
+    """Get the appropriate system prompt based on the current elicitation stage.
 
     Args:
+    ----
         stage: Current elicitation stage
 
     Returns:
+    -------
         System prompt for the AI
+
     """
     prompts = {
         "introduction": """
@@ -359,8 +368,8 @@ def _get_system_prompt_for_stage(stage: str) -> str:
 
 @router.post("/generate/simple")
 async def generate_simple_app() -> dict:
-    """
-    Generate a simple application structure.
+    """Generate a simple application structure.
+
     Reason: Provide a valid response for simple app generation integration tests.
     """
     return {"success": True, "app": "simple app generated"}
@@ -368,8 +377,8 @@ async def generate_simple_app() -> dict:
 
 @router.post("/generate/complex")
 async def generate_complex_app() -> dict:
-    """
-    Generate a complex application structure.
+    """Generate a complex application structure.
+
     Reason: Provide a valid response for complex app generation integration tests.
     """
     return {"success": True, "app": "complex app generated"}
@@ -377,8 +386,8 @@ async def generate_complex_app() -> dict:
 
 @router.get("/generate/file-permissions")
 async def get_file_permissions() -> dict:
-    """
-    Check file permissions for generated files.
+    """Check file permissions for generated files.
+
     Reason: Simulate a file permissions check for integration tests.
     """
     return {"success": True, "file_permissions": "correct"}

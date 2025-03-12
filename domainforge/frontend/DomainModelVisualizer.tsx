@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const DomainModelVisualizer: React.FC = () => {
   // Placeholder for domain model visualization

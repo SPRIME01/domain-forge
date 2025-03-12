@@ -1,5 +1,4 @@
-"""
-Python backend code generator.
+"""Python backend code generator.
 
 This module generates Python backend code from domain models using FastAPI and SQLAlchemy.
 """
@@ -31,11 +30,15 @@ class PythonBackendGenerator(BaseGenerator):
             directory.mkdir(parents=True, exist_ok=True)
 
     def generate_context(self, context: BoundedContext) -> None:
-        """
-        Generate code for a bounded context.
+        """Generate code for a bounded context.
 
         Args:
-            context: The bounded context to generate code for
+        ----
+            context: The bounded context to generate code for. Contains the entities,
+                    value objects, services, and their relationships for generating
+                    the Python backend implementation including FastAPI controllers
+                    and SQLAlchemy models.
+
         """
         logger.info(f"Generating Python code for bounded context: {context.name}")
 
@@ -91,7 +94,7 @@ class PythonBackendGenerator(BaseGenerator):
             )
 
             # Repository interface - using getattr for safe attribute access
-            if getattr(entity, 'repository', False):
+            if getattr(entity, "repository", False):
                 self.render_template(
                     "domain/repository.py.j2",
                     {"context": context, "entity": entity},

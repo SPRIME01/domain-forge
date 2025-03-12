@@ -1,6 +1,5 @@
 from pathlib import Path
 import pytest
-from typing import Any
 
 from domainforge.core.interpreter import DomainForgeInterpreter
 from domainforge.core.models import DomainModel

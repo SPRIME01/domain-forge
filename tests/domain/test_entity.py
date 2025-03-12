@@ -1,10 +1,9 @@
-"""
-Tests for domain entity behavior.
+"""Tests for domain entity behavior.
 
 This module contains tests that verify domain entity functionality,
 validation, and behavior.
 """
-import pytest
+
 from typing import Dict, Any
 import uuid
 from datetime import datetime

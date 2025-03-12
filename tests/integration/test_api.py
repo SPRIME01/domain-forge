@@ -1,6 +1,6 @@
 """API integration tests."""
 
-from typing import AsyncGenerator, Any
+from typing import AsyncGenerator
 
 import pytest
 import pytest_asyncio

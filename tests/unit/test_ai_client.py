@@ -4,12 +4,10 @@ import json
 import os
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
-from typing import Dict, Any, List
 
 import httpx
-from pydantic import BaseModel
 
-from domainforge.core.ai_client import AIClient, AIMessage, AIConversation, AIResponse
+from domainforge.core.ai_client import AIClient, AIMessage, AIConversation
 
 
 @pytest.fixture

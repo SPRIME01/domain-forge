@@ -1,8 +1,5 @@
 """Unit tests for the domain elicitation session functionality."""
 
-import pytest
-from typing import Dict, Any, List
-
 from domainforge.core.interpreter import DomainElicitationSession
 
 

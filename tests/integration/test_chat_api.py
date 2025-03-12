@@ -1,10 +1,8 @@
 """Integration tests for the chat API endpoints."""
 
-import os
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
-from fastapi import FastAPI
 from domainforge.infrastructure.app import app
 from domainforge.api.controllers.chat_controller import get_ai_client
 

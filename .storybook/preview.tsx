@@ -1,9 +1,9 @@
-import React from 'react';
+import React from "react";
 import type { Preview } from "@storybook/react";
-import { MantineProvider, createTheme } from '@mantine/core';
+import { MantineProvider, createTheme } from "@mantine/core";
 
 const theme = createTheme({
-  primaryColor: 'blue',
+  primaryColor: "blue",
 });
 
 const preview: Preview = {
@@ -17,7 +17,7 @@ const preview: Preview = {
     },
   },
   decorators: [
-    (Story) => (
+    Story => (
       <MantineProvider theme={theme}>
         <Story />
       </MantineProvider>

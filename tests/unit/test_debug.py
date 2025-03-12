@@ -1,7 +1,6 @@
 import json
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, Union
 
-import pytest
 from lark import Lark, Token, Tree
 
 from domainforge.core.transformer import DomainForgeTransformer
