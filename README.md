@@ -1,27 +1,27 @@
-# DomainForge
+# 🏗️ DomainForge
 
 [![CI Status](https://github.com/yourusername/domain-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/domain-forge/actions/workflows/ci.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 DomainForge is a powerful domain-driven code generation tool that transforms domain models into full-stack applications. It helps you build consistent, well-structured applications following clean architecture principles with minimal effort.
 
-## Features
+## ✨ Features
 
-- **Domain-Specific Language (DSL)**: Define your domain model using a simple, intuitive language
-- **AI-Guided Domain Modeling**: Conversational AI assistant helps you define your domain model
-- **Clean Architecture**: Generated code follows clean architecture principles and best practices
-- **Full-Stack Generation**: Create both backend (Python FastAPI) and frontend (TypeScript React) applications
-- **Customizable Templates**: Modify templates to match your specific requirements
-- **Domain-Driven Design**: Support for DDD concepts including bounded contexts, entities, value objects, and repositories
-- **Entity Relationships**: Define relationships between entities with various cardinalities
-- **API Generation**: Automatic REST API generation with OpenAPI documentation
-- **UI Generation**: Generate React components including forms, tables, and detail views
-- **Validation**: Built-in validation rules for entity properties
-- **Testing**: Generated test suite with unit and integration tests
-- **Database Support**: SQL database support through SQLAlchemy
-- **Async Support**: Fully async backend implementation for high performance
+- **🔤 Domain-Specific Language (DSL)**: Define your domain model using a simple, intuitive language
+- **🤖 AI-Guided Domain Modeling**: Conversational AI assistant helps you define your domain model
+- **🏛️ Clean Architecture**: Generated code follows clean architecture principles and best practices
+- **🚀 Full-Stack Generation**: Create both backend (Python FastAPI) and frontend (TypeScript React) applications
+- **📝 Customizable Templates**: Modify templates to match your specific requirements
+- **🧩 Domain-Driven Design**: Support for DDD concepts including bounded contexts, entities, value objects, and repositories
+- **🔗 Entity Relationships**: Define relationships between entities with various cardinalities
+- **🌐 API Generation**: Automatic REST API generation with OpenAPI documentation
+- **💻 UI Generation**: Generate React components including forms, tables, and detail views
+- **✅ Validation**: Built-in validation rules for entity properties
+- **🧪 Testing**: Generated test suite with unit and integration tests
+- **🗄️ Database Support**: SQL database support through SQLAlchemy
+- **⚡ Async Support**: Fully async backend implementation for high performance
 
-## Installation
+## 📦 Installation
 
 ```bash
 # Install with pip
@@ -31,9 +31,9 @@ pip install domainforge
 uv pip install domainforge
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-### Using the AI Assistant (New!)
+### 🤖 Using the AI Assistant (New!)
 
 1. Configure your OpenAI API key:
 
@@ -55,15 +55,15 @@ domainforge assistant
 
 3. Describe your application domain to the AI, which will guide you through defining:
 
-   - Bounded contexts
-   - Entities and their properties
-   - Relationships between entities
-   - Business rules and constraints
-   - APIs and UI components
+   - 📦 Bounded contexts
+   - 🏛️ Entities and their properties
+   - 🔗 Relationships between entities
+   - 📋 Business rules and constraints
+   - 🌐 APIs and UI components
 
 4. Once your domain model is complete, the assistant will generate the DSL code and create your application.
 
-### Using DSL Directly
+### 📝 Using DSL Directly
 
 1. Create a `.domainforge` file that defines your domain model:
 
@@ -130,7 +130,7 @@ npm install
 npm run dev
 ```
 
-## Command-Line Options
+## 🧰 Command-Line Options
 
 ```
 domainforge [command] [options]
@@ -157,9 +157,9 @@ Options for 'assistant':
   --model <model>        AI model to use (default: gpt-4)
 ```
 
-## Configuration
+## ⚙️ Configuration
 
-### OpenAI API Configuration
+### 🤖 OpenAI API Configuration
 
 DomainForge's AI assistant uses the OpenAI API or any compatible API service. Configure it using:
 
@@ -179,7 +179,7 @@ DomainForge's AI assistant uses the OpenAI API or any compatible API service. Co
 
 3. Command line arguments (see options above)
 
-### Alternative AI Providers
+### 🔄 Alternative AI Providers
 
 DomainForge supports any OpenAI API-compatible service:
 
@@ -189,50 +189,50 @@ DomainForge supports any OpenAI API-compatible service:
 
 To use an alternative provider, specify the `OPENAI_API_BASE` URL.
 
-## DSL Specification
+## 📖 DSL Specification
 
 The DomainForge DSL allows you to define your domain model in a clear, structured way. For full details, see the [DSL Specification](docs/dsl-specification.md).
 
-### Basic Components
+### 🧱 Basic Components
 
-- **Bounded Contexts**: Represented with `@ContextName { ... }`
-- **Entities**: Represented with `#EntityName { ... }`
-- **Value Objects**: Represented with `%ValueObjectName { ... }`
-- **Relationships**: Connected using various symbols like `=>`, `<->`, etc.
-- **Properties**: Defined as `name: Type [constraints]`
-- **Methods**: Defined as `methodName(parameters) { ... }`
-- **API Endpoints**: Defined as `api: METHOD "/path"`
-- **UI Components**: Defined as `ui: ComponentType`
+- **📦 Bounded Contexts**: Represented with `@ContextName { ... }`
+- **🏛️ Entities**: Represented with `#EntityName { ... }`
+- **💎 Value Objects**: Represented with `%ValueObjectName { ... }`
+- **🔗 Relationships**: Connected using various symbols like `=>`, `<->`, etc.
+- **📊 Properties**: Defined as `name: Type [constraints]`
+- **⚙️ Methods**: Defined as `methodName(parameters) { ... }`
+- **🌐 API Endpoints**: Defined as `api: METHOD "/path"`
+- **🖼️ UI Components**: Defined as `ui: ComponentType`
 
-## Architecture
+## 🏛️ Architecture
 
 DomainForge follows a clean architecture approach, generating code with the following layers:
 
-### Backend (Python FastAPI)
+### 🔙 Backend (Python FastAPI)
 
-- **Domain Layer**: Core entities, value objects, and repository interfaces
-- **Application Layer**: Use cases, DTOs, and application services
-- **Infrastructure Layer**: Database implementations, external services
-- **API Layer**: Controllers, routes, and request/response models
+- **📦 Domain Layer**: Core entities, value objects, and repository interfaces
+- **⚙️ Application Layer**: Use cases, DTOs, and application services
+- **🛠️ Infrastructure Layer**: Database implementations, external services
+- **🌐 API Layer**: Controllers, routes, and request/response models
 
-### Frontend (TypeScript React)
+### 🖥️ Frontend (TypeScript React)
 
-- **Domain Layer**: Core entities and value objects
-- **Application Layer**: Use cases and application services
-- **Infrastructure Layer**: API clients and state management
-- **UI Layer**: React components, pages, and hooks
+- **📦 Domain Layer**: Core entities and value objects
+- **⚙️ Application Layer**: Use cases and application services
+- **🛠️ Infrastructure Layer**: API clients and state management
+- **💻 UI Layer**: React components, pages, and hooks
 
 For more details, see the [Architecture Specification](docs/architecture-specification.md).
 
-## Development
+## 👨‍💻 Development
 
-### Prerequisites
+### 📋 Prerequisites
 
 - Python 3.8+
 - Node.js 14+
 - uv package manager (recommended) or pip
 
-### Setup Development Environment
+### 🛠️ Setup Development Environment
 
 ```bash
 # Clone the repository
@@ -247,7 +247,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv pip install -e ".[dev]"
 ```
 
-### Running Tests
+### 🧪 Running Tests
 
 ```bash
 # Run all tests
@@ -260,7 +260,7 @@ uv run pytest --cov=domainforge tests/
 uv run pytest tests/bdd/
 ```
 
-## Contributing
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -270,6 +270,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch: `git push origin feature/your-feature-name`
 5. Submit a pull request
 
-## License
+## 📄 License
 
 This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
