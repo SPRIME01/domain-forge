@@ -68,6 +68,15 @@ These instructions guide GitHub Copilot to generate code that adheres to best pr
 - Keep features small and focused
 - Use pull requests for code reviews
 - Commit often with descriptive messages
+- Commit Message Format:
+        - 📝 Be extremely detailed with file changes
+        - 🤔 Explain the reasoning behind each change
+        - 🎨 Use relevant emojis to categorize changes
+        - Example: "✨ feat(auth): Add JWT token validation to login endpoint
+          - 🔧 Modified: src/auth/jwt_validator.py
+          - 📦 Added: tests/auth/test_jwt_validator.py
+          - 🔥 Removed: old token validation logic
+          Why: Improves security by implementing industry-standard JWT validation"
 
 ---
 
@@ -99,13 +108,28 @@ These instructions guide GitHub Copilot to generate code that adheres to best pr
 ## Testing
 
 - **Structure:** Follow AAA (Arrange, Act, Assert) pattern
+- **Naming:** Use verbose class names that clearly state the test case
+        Example: `test_UserAuthentication_WithValidCredentials_ReturnsToken`
 - **Types:** Write unit, integration, and BDD-style tests
 - **Practices:**
         - Ensure test idempotence
         - Mock external dependencies
-        - Prioritize meaningful tests over quantity
+        - Use descriptive test names following the pattern:
+          `test_[Feature]_[Scenario]_[ExpectedResult]`
         - Use descriptive test names
         - Integrate tests in CI/CD pipelines
+        - Structure each test with clear AAA sections:
+          ```python
+          def test_Feature_Scenario_ExpectedResult():
+              # Arrange
+              # Set up test prerequisites
+
+              # Act
+              # Execute the action being tested
+
+              # Assert
+              # Verify the expected outcomes
+          ```
 
 ---
 
