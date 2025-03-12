@@ -33,14 +33,17 @@ visibility: VISIBILITY
 return_type: ":" type_definition
 method_body: "{" description? "}"
 
+// Define parameter_list and layout_params correctly
 parameter_list: parameter ("," parameter)*
+layout_params: layout_param_def ("," layout_param_def)*
+
 parameter: IDENTIFIER ":" type_definition parameter_default?
 parameter_default: "=" default_value
 
-default_value: INT | FLOAT | STRING | IDENTIFIER | list_value
-list_value: "[" value_list? "]"
-value_list: value ("," value)*
-value: INT | FLOAT | STRING | IDENTIFIER | list_value
+default_value: INT | FLOAT | STRING | IDENTIFIER | generic_list_value
+generic_list_value: "[" generic_value_list? "]"
+generic_value_list: generic_value ("," generic_value)*
+generic_value: INT | FLOAT | STRING | IDENTIFIER | generic_list_value
 
 constraint: "required" | "unique" | min_constraint | max_constraint | pattern_constraint | fk_constraint
 min_constraint: "min" ":" INT
@@ -60,19 +63,48 @@ api_params: "(" parameter_list? ")"
 api_return: ":" type_definition
 api_desc: "{" description? "}"
 
-ui_definition: "ui" ":" UI_COMPONENT ui_params? ui_desc?
-ui_params: "(" parameter_list? ")"
-ui_desc: "{" description? "}"
+// Enhanced UI Definition with support for nesting
+ui_definition: "ui" ":" (BASIC_COMPONENT | LAYOUT_COMPONENT | NAV_COMPONENT | INPUT_COMPONENT | DISPLAY_COMPONENT) ui_params? ui_components? ui_description?
+
+// Layout and UI parameter definitions
+ui_param_def: IDENTIFIER ":" param_value
+layout_param_def: layout_declaration | "layout" ":" layout_object
+layout_declaration: IDENTIFIER ":" layout_object
+
+// UI Parameter types and values
+ui_parameter: ui_param_def
+layout_parameter: layout_param_def
+param_value: STRING | INT | FLOAT | IDENTIFIER | generic_list_value
+
+// Layout object handling
+layout_object: "{" layout_property_list "}"
+layout_property_list: object_property (","? object_property)*
+object_property: IDENTIFIER ":" property_value
+property_value: STRING | INT | FLOAT | IDENTIFIER | generic_list_value
+
+// Parameter lists
+ui_params: "(" mixed_parameter_list? ")"
+mixed_parameter_list: (ui_parameter | layout_param_def) ("," (ui_parameter | layout_param_def))*
+
+layout_param_list: layout_param_def ("," layout_param_def)*
+ui_parameter_list: ui_parameter ("," ui_parameter)*
+
+ui_components: "components" ":" "{" ui_definition* "}"
+ui_description: "description" ":" "{" description? "}"
+
+// Component Type Groups
+BASIC_COMPONENT: "Form" | "Table" | "Card" | "Detail" | "List"
+LAYOUT_COMPONENT: "Container" | "Grid" | "Flex" | "Panel" | "Tabs" | "Accordion"
+NAV_COMPONENT: "Menu" | "Navbar" | "Sidebar" | "Breadcrumbs" | "Pagination"
+INPUT_COMPONENT: "Input" | "Select" | "Checkbox" | "Radio" | "DatePicker" | "TimePicker" | "FileUpload"
+DISPLAY_COMPONENT: "Modal" | "Dialog" | "Tooltip" | "Chart" | "Badge" | "Avatar" | "Progress"
 
 // Terminals
 IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
 RELATIONSHIP_SYMBOL: "=>" | "<->" | "--" | "->" | "." | "::" | "/" | "="
 HTTP_METHOD: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
-UI_COMPONENT: "Form" | "Table" | "Card" | "Detail" | "List"
 VISIBILITY: "public" | "private" | "protected"
-
 STRING: /"[^"]*"/
-
 %import common.INT
 %import common.FLOAT
 %import common.WS

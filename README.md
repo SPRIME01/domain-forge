@@ -204,6 +204,40 @@ The DomainForge DSL allows you to define your domain model in a clear, structure
 - **🌐 API Endpoints**: Defined as `api: METHOD "/path"`
 - **🖼️ UI Components**: Defined as `ui: ComponentType`
 
+## 🖼️ UI Components
+
+DomainForge supports the following UI components that can be defined within entities using the DSL:
+
+1. **Form**: Typically used for data input/editing. Can have parameters defined through `ui_params` and can include a description in `ui_desc`.
+2. **Table**: Used for displaying tabular data. Suitable for showing collections of entities.
+3. **Card**: Represents entity data in a card format. Good for grid/dashboard layouts.
+4. **Detail**: Shows detailed view of an entity. Useful for showing all properties of a single record.
+5. **List**: Displays data in a list format. Suitable for simpler data presentations.
+
+### Usage Example
+
+Here's how you might define a UI component in the DSL:
+
+```plaintext
+#User {
+    name: String
+    email: String
+
+    ui: Form (
+        fields: List<String> = ["name", "email"]
+    ) { "User registration form" }
+
+    ui: Table (
+        columns: List<String> = ["name", "email"]
+    ) { "User management table" }
+}
+```
+
+The grammar allows for:
+- Optional parameters through `ui_params`
+- Optional descriptions through `ui_desc`
+- Multiple UI definitions per entity
+
 ## 🏛️ Architecture
 
 DomainForge follows a clean architecture approach, generating code with the following layers:

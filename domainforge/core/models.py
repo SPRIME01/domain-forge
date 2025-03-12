@@ -4,7 +4,7 @@ These models represent the parsed structure of a domain model specification
 and are used to generate code for both backend and frontend applications.
 """
 
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -13,7 +13,7 @@ class Parameter(BaseModel):
     """Represents a parameter in a method signature or API endpoint."""
 
     name: str
-    type: str
+    parameter_type: str
     default_value: Optional[Any] = None
 
 
@@ -21,7 +21,7 @@ class Property(BaseModel):
     """Represents a property/attribute of an entity, value object, etc."""
 
     name: str
-    type: str
+    property_type: str
     default_value: Optional[Any] = None
     constraints: List[str] = Field(default_factory=list)
 
@@ -30,10 +30,10 @@ class Method(BaseModel):
     """Represents a method/function in an entity or service."""
 
     name: str
-    visibility: str = "public"
     parameters: List[Parameter] = Field(default_factory=list)
     return_type: Optional[str] = None
     description: Optional[str] = None
+    visibility: Optional[str] = None
 
 
 class ApiEndpoint(BaseModel):
@@ -46,12 +46,21 @@ class ApiEndpoint(BaseModel):
     description: Optional[str] = None
 
 
+class LayoutProperty(BaseModel):
+    """Represents a layout property for UI components."""
+
+    name: str
+    value: Union[str, int, float, Dict[str, Any]]
+
+
 class UiComponent(BaseModel):
     """Represents a UI component definition."""
 
     component_type: str
     parameters: List[Parameter] = Field(default_factory=list)
+    layout_properties: Dict[str, Any] = Field(default_factory=dict)
     description: Optional[str] = None
+    children: List["UiComponent"] = Field(default_factory=list)
 
 
 class Relationship(BaseModel):

@@ -4,7 +4,7 @@ This module transforms the Lark parse tree into domain model objects that can be
 used by the code generators.
 """
 
-from typing import Any, List, Optional, Union, cast
+from typing import Any, List, Optional, Union, cast, Dict
 
 from lark import Token, Transformer, Tree
 
@@ -50,63 +50,6 @@ class DomainForgeTransformer(Transformer):
                 ctx = self.context_definition(item.children)
                 contexts.append(ctx)
         return DomainModel(bounded_contexts=contexts)
-
-    def context_definition(self, items: List[Tree]) -> BoundedContext:
-        """Transform a context definition into a BoundedContext."""
-        name: str = str(items[0])
-
-        # Get all the children from the context_children node
-        contents: List[Tree] = []
-        if len(items) > 1:
-            if hasattr(items[1], "data") and items[1].data == "context_children":
-                contents = items[1].children
-
-        entities: List[Entity] = []
-        value_objects: List[ValueObject] = []
-        events: List[Event] = []
-        services: List[Service] = []
-        repositories: List[Repository] = []
-        modules: List[Module] = []
-        roles: List[Role] = []
-        relationships: List[Relationship] = []
-
-        for item in contents:
-            if hasattr(item, "data"):
-                if item.data == "entity_definition":
-                    entities.append(self.entity_definition(item.children))
-                elif item.data == "value_object_definition":
-                    value_objects.append(self.value_object_definition(item.children))
-                elif item.data == "event_definition":
-                    events.append(self.event_definition(item.children))
-                elif item.data == "service_definition":
-                    services.append(self.service_definition(item.children))
-                elif item.data == "repository_definition":
-                    repositories.append(self.repository_definition(item.children))
-                elif item.data == "module_definition":
-                    modules.append(self.module_definition(item.children))
-                elif item.data == "role_definition":
-                    roles.append(self.role_definition(item.children))
-                elif item.data == "relationship_definition":
-                    relationships.append(self.relationship_definition(item.children))
-
-        # Add relationships to their source entities
-        for rel in relationships:
-            source_entity_name: str = rel.source_entity
-            for entity in entities:
-                if entity.name == source_entity_name:
-                    entity.relationships.append(rel)
-                    break
-
-        return BoundedContext(
-            name=name,
-            entities=entities,
-            value_objects=value_objects,
-            events=events,
-            services=services,
-            repositories=repositories,
-            modules=modules,
-            roles=roles,
-        )
 
     def context_children(self, items: List[Tree]) -> List[Tree]:
         """Transform context children into a list of model objects."""
@@ -349,7 +292,7 @@ class DomainForgeTransformer(Transformer):
 
         return Property(
             name=name,
-            type=type_str,
+            property_type=type_str,
             default_value=default_value,
             constraints=constraints,
         )
@@ -419,7 +362,7 @@ class DomainForgeTransformer(Transformer):
                     parameters.append(
                         Parameter(
                             name=param_name,
-                            type=param_type,
+                            parameter_type=param_type,
                             default_value=param_default,
                         )
                     )
@@ -504,7 +447,7 @@ class DomainForgeTransformer(Transformer):
 
         return Parameter(
             name=name,
-            type=type_str,
+            parameter_type=type_str,
             default_value=default_value,
         )
 
@@ -597,11 +540,11 @@ class DomainForgeTransformer(Transformer):
 
     def relationship_definition(self, items: List[Tree]) -> Relationship:
         """Transform a relationship definition into a Relationship."""
-        source: str = (
-            items[0].children[0] if hasattr(items[0], "children") else str(items[0])
+        source: str = str(
+            items[0].children[0] if hasattr(items[0], "children") else items[0]
         )
-        target: str = (
-            items[2].children[0] if hasattr(items[2], "children") else str(items[2])
+        target: str = str(
+            items[2].children[0] if hasattr(items[2], "children") else items[2]
         )
         relationship_type: str = str(items[1])
 
@@ -724,22 +667,36 @@ class DomainForgeTransformer(Transformer):
         component_type: str = str(items[0])
 
         parameters: List[Parameter] = []
+        layout_properties: Dict[str, Any] = {}
+        children: List[UiComponent] = []
         description: Optional[str] = None
 
         index: int = 1
 
-        # Handle optional parameters
+        # Handle optional parameters and layout
         if (
             index < len(items)
             and hasattr(items[index], "data")
             and items[index].data == "ui_params"
         ):
-            if (
-                len(items[index].children) > 0
-                and hasattr(items[index].children[0], "data")
-                and items[index].children[0].data == "parameter_list"
-            ):
-                parameters = items[index].children[0].children
+            # Process parameter list
+            for child in items[index].children:
+                if hasattr(child, "data"):
+                    if child.data == "parameter_list":
+                        parameters = self._process_parameter_list(child.children)
+                    elif child.data == "layout_params":
+                        layout_properties = self._process_layout_params(child.children)
+            index += 1
+
+        # Handle optional ui_children (nested components)
+        if (
+            index < len(items)
+            and hasattr(items[index], "data")
+            and items[index].data == "ui_children"
+        ):
+            for child in items[index].children:
+                if hasattr(child, "data") and child.data == "ui_definition":
+                    children.append(self.ui_definition(child.children))
             index += 1
 
         # Handle optional description
@@ -759,28 +716,111 @@ class DomainForgeTransformer(Transformer):
         return UiComponent(
             component_type=component_type,
             parameters=parameters,
+            layout_properties=layout_properties,
             description=description,
+            children=children,
         )
+
+    def _process_parameter_list(self, items: List[Tree]) -> List[Parameter]:
+        """Process parameter list for UI components."""
+        parameters = []
+        for param in items:
+            if hasattr(param, "data") and param.data == "parameter":
+                param_name: str = str(param.children[0])
+                param_type_def: Tree = param.children[1]
+                param_type: str = self._extract_type(param_type_def)
+                param_default: Optional[Any] = None
+
+                if len(param.children) > 2:
+                    default_node = param.children[2]
+                    if (
+                        hasattr(default_node, "data")
+                        and default_node.data == "parameter_default"
+                    ):
+                        param_default = default_node.children[0]
+                        if hasattr(param_default, "data"):
+                            if param_default.data == "default_value":
+                                param_default = self.default_value(
+                                    param_default.children
+                                )
+
+                parameters.append(
+                    Parameter(
+                        name=param_name,
+                        parameter_type=param_type,
+                        default_value=param_default,
+                    )
+                )
+        return parameters
+
+    def _process_layout_params(self, items: List[Tree]) -> Dict[str, Any]:
+        """Process layout parameters for UI components."""
+        layout_props = {}
+
+        for prop in items:
+            if hasattr(prop, "data") and prop.data == "layout_property":
+                prop_name = str(prop.children[0])
+                prop_value_node = prop.children[1]
+
+                if (
+                    hasattr(prop_value_node, "data")
+                    and prop_value_node.data == "layout_value"
+                ):
+                    value_node = prop_value_node.children[0]
+
+                    if isinstance(value_node, Token):
+                        if value_node.type == "STRING":
+                            prop_value = str(value_node)[1:-1]  # Remove quotes
+                        elif value_node.type == "INT":
+                            prop_value = int(str(value_node))
+                        elif value_node.type == "FLOAT":
+                            prop_value = float(str(value_node))
+                        elif value_node.type == "IDENTIFIER":
+                            prop_value = str(value_node)
+                    elif (
+                        hasattr(value_node, "data")
+                        and value_node.data == "layout_object"
+                    ):
+                        # Handle nested layout objects recursively
+                        prop_value = self._process_layout_params(value_node.children)
+                    else:
+                        prop_value = str(value_node)
+
+                    layout_props[prop_name] = prop_value
+
+        return layout_props
 
     def ui_params(self, items: List[Tree]) -> List[Tree]:
         """Get the UI parameters."""
+        return items
+
+    def ui_children(self, items: List[Tree]) -> List[Tree]:
+        """Get the UI children."""
         return items
 
     def ui_desc(self, items: List[Tree]) -> Optional[Tree]:
         """Get the UI description."""
         return items[0] if items else None
 
+    def layout_params(self, items: List[Tree]) -> List[Tree]:
+        """Get the layout parameters."""
+        return items
+
+    def layout_property(self, items: List[Tree]) -> Tree:
+        """Transform a layout property."""
+        return Tree("layout_property", items)
+
+    def layout_value(self, items: List[Tree]) -> Any:
+        """Transform a layout value."""
+        return items[0]
+
+    def layout_object(self, items: List[Tree]) -> Dict[str, Any]:
+        """Transform a layout object."""
+        return self._process_layout_params(items)
+
     # Break down complex functions like context_definition and entity_definition
-    def context_definition(self, ctx: List[Tree]) -> BoundedContext:
-        """Transform a context definition into a BoundedContext."""
-        name: str = str(ctx[0])
-
-        # Get all the children from the context_children node
-        contents: List[Tree] = []
-        if len(ctx) > 1:
-            if hasattr(ctx[1], "data") and ctx[1].data == "context_children":
-                contents = ctx[1].children
-
+    def _extract_context_components(self, contents: List[Tree]) -> tuple:
+        """Process context children into components using mapping to reduce complexity."""
         entities: List[Entity] = []
         value_objects: List[ValueObject] = []
         events: List[Event] = []
@@ -790,26 +830,33 @@ class DomainForgeTransformer(Transformer):
         roles: List[Role] = []
         relationships: List[Relationship] = []
 
-        for item in contents:
-            if hasattr(item, "data"):
-                if item.data == "entity_definition":
-                    entities.append(self.entity_definition(item.children))
-                elif item.data == "value_object_definition":
-                    value_objects.append(self.value_object_definition(item.children))
-                elif item.data == "event_definition":
-                    events.append(self.event_definition(item.children))
-                elif item.data == "service_definition":
-                    services.append(self.service_definition(item.children))
-                elif item.data == "repository_definition":
-                    repositories.append(self.repository_definition(item.children))
-                elif item.data == "module_definition":
-                    modules.append(self.module_definition(item.children))
-                elif item.data == "role_definition":
-                    roles.append(self.role_definition(item.children))
-                elif item.data == "relationship_definition":
-                    relationships.append(self.relationship_definition(item.children))
+        category_map = {
+            "entity_definition": (entities, self.entity_definition),
+            "value_object_definition": (value_objects, self.value_object_definition),
+            "event_definition": (events, self.event_definition),
+            "service_definition": (services, self.service_definition),
+            "repository_definition": (repositories, self.repository_definition),
+            "module_definition": (modules, self.module_definition),
+            "role_definition": (roles, self.role_definition),
+            "relationship_definition": (relationships, self.relationship_definition),
+        }
 
-        # Add relationships to their source entities
+        for item in contents:
+            if hasattr(item, "data") and item.data in category_map:
+                target_list, transform_func = category_map[item.data]
+                target_list.append(transform_func(item.children))
+
+        return entities, value_objects, events, services, repositories, modules, roles, relationships
+
+    def context_definition(self, ctx: List[Tree]) -> BoundedContext:
+        """Transform a context definition into a BoundedContext."""
+        name: str = str(ctx[0])
+        contents: List[Tree] = []
+        if len(ctx) > 1 and hasattr(ctx[1], "data") and ctx[1].data == "context_children":
+            contents = ctx[1].children
+
+        entities, value_objects, events, services, repositories, modules, roles, relationships = self._extract_context_components(contents)
+
         for rel in relationships:
             source_entity_name: str = rel.source_entity
             for entity in entities:
@@ -826,61 +873,6 @@ class DomainForgeTransformer(Transformer):
             repositories=repositories,
             modules=modules,
             roles=roles,
-        )
-
-    # Fix append type errors
-    def entity_definition(self, items: List[Tree]) -> Entity:
-        """Transform an entity definition into an Entity."""
-        name: str = str(items[0])
-
-        # Check if we have an inheritance node
-        parent: Optional[str] = None
-        children_node: Optional[Tree] = None
-        if len(items) > 1:
-            if hasattr(items[1], "data"):
-                if items[1].data == "entity_inheritance":
-                    parent = str(items[1].children[0])
-                    children_node = items[2] if len(items) > 2 else None
-                else:
-                    children_node = items[1]
-            else:
-                children_node = items[1]
-
-        # Transform the children
-        properties: List[Property] = []
-        methods: List[Method] = []
-        apis: List[ApiEndpoint] = []
-        uis: List[UiComponent] = []
-        relationships: List[Relationship] = []
-
-        if (
-            children_node
-            and hasattr(children_node, "data")
-            and children_node.data == "entity_children"
-        ):
-            transformed_children: List[Any] = self.entity_children(
-                children_node.children
-            )
-            for child in transformed_children:
-                if isinstance(child, Property):
-                    properties.append(child)
-                elif isinstance(child, Method):
-                    methods.append(child)
-                elif isinstance(child, ApiEndpoint):
-                    apis.append(child)
-                elif isinstance(child, UiComponent):
-                    uis.append(child)
-                elif isinstance(child, Relationship):
-                    relationships.append(child)
-
-        return Entity(
-            name=name,
-            parent=parent,
-            properties=properties,
-            methods=methods,
-            apis=apis,
-            uis=uis,
-            relationships=relationships,
         )
 
     # Fix return type issues
