@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any
 from enum import Enum
 
-# Import mock models from the model test file
-from .test_enhanced_ui_model import UIComponent, ComponentType, UIDefinition
+# Import mock models directly without relative import
+from tests.unit.test_enhanced_ui_model import UIComponent, ComponentType, UIDefinition
 
 
 @dataclass
@@ -299,17 +299,29 @@ export const {component_name}: React.FC<{component_name}Props> = (props) => {{
         return "{ " + ", ".join(styles) + " }"
 
     def _generate_children(self, children: List[UIComponent]) -> str:
-        """Generate JSX for child components."""
+        """Generate JSX for child components recursively."""
         if not children:
             return "{props.children}"
 
-        # Generate placeholder imports for child components
+        # Generate child components recursively
         child_jsx = []
         for i, child in enumerate(children):
             component_name = f"{child.component_type.value}Component"
-            child_jsx.append(f'<{component_name} {{...childProps}} key="{i}" />')
+            child_props = self._generate_props(child.parameters)
+            layout_style = self._generate_layout_style(child.layout)
+            nested_children = self._generate_children(child.children)
 
-        return "\n      ".join(child_jsx)
+            # Generate child component with its own children
+            child_jsx.append(f'''
+      <{component_name}
+        {{...props}}
+        style={{{layout_style}}}
+        key="{i}"
+      >
+        {nested_children}
+      </{component_name}>''')
+
+        return "\n".join(child_jsx)
 
 
 class TestEnhancedUIGeneration:

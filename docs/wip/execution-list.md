@@ -30,14 +30,14 @@ Implement an enhanced UI component system for DomainForge that enables the gener
 - [x] Create integration tests
 
 ### 3. Grammar & Parser Updates
-- [ ] Extend grammar for new component types
-- [ ] Add support for component nesting
-- [ ] Implement layout specification syntax
-- [ ] Add navigation flow syntax
-- [ ] Update parser to handle new grammar constructs
+- [x] Extend grammar for new component types
+- [x] Add support for component nesting
+- [x] Implement layout specification syntax
+- [x] Add navigation flow syntax
+- [x] Update parser to handle new grammar constructs
 
 ### 4. Domain Model Enhancements
-- [ ] Enhance UI component models
+- [x] Enhance UI component models
 - [ ] Create layout models
 - [ ] Implement component tree structure
 - [ ] Add navigation flow models
@@ -109,9 +109,9 @@ Implement an enhanced UI component system for DomainForge that enables the gener
 | Stage | Status | Notes |
 |-------|--------|-------|
 | Planning & Design | ✅ Complete | Defined component types, layout system, and nesting rules |
-| Test Development | ✅ Complete | Created 4 comprehensive test files covering all aspects |
-| Grammar & Parser Updates | 🔶 In Progress | Next focus area |
-| Domain Model Enhancements | Not Started | |
+| Test Development | ✅ Complete | Created comprehensive test files covering all aspects |
+| Grammar & Parser Updates | ✅ Complete | Added navigation flow syntax and updated parser |
+| Domain Model Enhancements | 🔶 In Progress | Enhanced UI component models, created tests |
 | Code Generation Updates | Not Started | |
 | Template Creation | Not Started | |
 | Documentation | Not Started | |
@@ -127,3 +127,15 @@ Implement an enhanced UI component system for DomainForge that enables the gener
   - Created `test_enhanced_ui_generation.py` with mock code generation implementation
   - Created `test_enhanced_ui_integration.py` for end-to-end integration testing
 - Next steps: Implement grammar updates to add support for new component types, nesting, and layout specifications
+- Grammar & Parser Updates (2023-06-17):
+  - Added navigation flow syntax to grammar.lark
+  - Updated parser to handle new navigation constructs
+  - Completed all grammar and parser related tasks
+- Domain Model Enhancements (2023-06-17):
+  - Enhanced UI component models with support for nesting and layout properties
+  - Added additional tests for navigation flow features:
+    - Created unit tests for grammar navigation syntax
+    - Created unit tests for parser navigation flow handling
+    - Created unit tests for UI component models with navigation support
+    - Created integration test for navigation flow feature
+  - Working on layout models next

@@ -1,164 +1,206 @@
-"""Command-line interface for DomainForge.
+"""Command-line interface for DomainForge."""
 
-This module provides the command-line interface for the DomainForge tool.
-"""
-
+import json
 import logging
-import os
-import sys
 from pathlib import Path
-from typing import Optional, Any
-
 import click
+import yaml
 
-from .core.interpreter import DomainForgeInterpreter
-from .generators.python_backend_generator import PythonBackendGenerator
-from .generators.typescript_frontend_generator import TypeScriptFrontendGenerator
+from .config.settings import get_settings
+from .plugins.plugin_manager import PluginManager
+from .plugins.command import plugin_command
+from .plugins.discovery import find_plugins
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler()],
-)
-logger: logging.Logger = logging.getLogger("domainforge")
+logger = logging.getLogger(__name__)
+
+# Initialize the plugin manager
+settings = get_settings()
+plugin_manager = PluginManager(settings.plugins_dir)
 
 
-@click.command()
-@click.argument(
-    "input_file", type=click.Path(exists=True, file_okay=True, dir_okay=False)
-)
-@click.option(
-    "-o",
-    "--output",
-    "output_dir",
-    type=click.Path(),
-    default="./output",
-    help="Output directory for generated code",
-)
-@click.option(
-    "--backend-only",
-    is_flag=True,
-    help="Generate only the backend code",
-)
-@click.option(
-    "--frontend-only",
-    is_flag=True,
-    help="Generate only the frontend code",
-)
-@click.option(
-    "--export-model",
-    is_flag=True,
-    help="Export the domain model as JSON",
-)
-@click.option(
-    "--model-path",
-    type=click.Path(),
-    help="Path where the domain model should be exported",
-)
-@click.option(
-    "-v",
-    "--verbose",
-    is_flag=True,
-    help="Enable verbose output",
-)
-def main(
-    input_file: str,
-    output_dir: str,
-    backend_only: bool,
-    frontend_only: bool,
-    export_model: bool,
-    model_path: Optional[str],
-    verbose: bool,
-) -> None:
-    """Domainforge - Generate full-stack applications from domain models.
-
-    INPUT_FILE: Path to the .domainforge DSL file
-    """
-    # Set log level
-    if verbose:
-        logger.setLevel(logging.DEBUG)
-
-    logger.info(f"DomainForge v{get_version()}")
-    logger.info(f"Processing input file: {input_file}")
-
-    # Create output directory if it doesn't exist
-    output_path: Path = Path(output_dir)
-    if not output_path.exists():
-        os.makedirs(output_path)
-        logger.debug(f"Created output directory: {output_path}")
-
-    try:
-        # Parse and interpret the domain model
-        interpreter: DomainForgeInterpreter = DomainForgeInterpreter()
-        domain_model = interpreter.interpret_file(input_file)
-
-        logger.info(
-            f"Successfully interpreted domain model with "
-            f"{len(domain_model.bounded_contexts)} bounded contexts"
+def _handle_no_plugins(output_format: str) -> None:
+    """Handle the case when no plugins are found."""
+    if output_format == "json":
+        click.echo(
+            json.dumps(
+                {
+                    "valid": False,
+                    "errors": ["No validator plugin found"],
+                    "warnings": [],
+                }
+            )
         )
+    else:
+        click.echo("No validator plugin found")
+    exit(1)
 
-        # Export the domain model if requested
-        if export_model:
-            export_path: str = (
-                model_path if model_path else str(output_path / "domain_model.json")
+
+def _validate_with_plugins(model: str, plugins: list) -> tuple[list, list]:
+    """Run validation using all plugins and return critical and style errors."""
+    style_errors = []
+    critical_errors = []
+
+    for plugin in plugins:
+        try:
+            errors = plugin.validate(model)
+            if errors:
+                for error in errors:
+                    if "should be" in error:
+                        style_errors.append(error)
+                    else:
+                        critical_errors.append(error)
+        except Exception as e:
+            logger.exception("Plugin validation failed")
+            critical_errors.append(str(e))
+
+    return critical_errors, style_errors
+
+
+def _output_validation_results(
+    is_valid: bool,
+    all_errors: list,
+    output_format: str,
+) -> None:
+    """Output validation results in the specified format."""
+    if output_format == "json":
+        click.echo(
+            json.dumps(
+                {
+                    "valid": is_valid,
+                    "errors": all_errors,
+                    "warnings": [],
+                }
             )
-            interpreter.export_model(domain_model, export_path)
-            logger.info(f"Domain model exported to: {export_path}")
+        )
+    else:
+        if not all_errors:
+            click.echo("Validation successful")
+        else:
+            click.echo("Validation Errors:")
+            for error in all_errors:
+                click.echo(f"- {error}")
 
-        # Generate backend code if requested
-        if not frontend_only:
-            logger.info("Generating Python backend code...")
-            backend_dir: Path = output_path / "backend"
-            os.makedirs(backend_dir, exist_ok=True)
 
-            backend_generator: PythonBackendGenerator = PythonBackendGenerator(
-                output_dir=str(backend_dir)
+@click.group()
+def cli():
+    """DomainForge CLI - Generate full-stack applications from domain models."""
+    pass
+
+
+@cli.command()
+@click.argument("input_file", type=click.Path(exists=True))
+@click.option("--strict", is_flag=True, help="Enable strict validation")
+@click.option(
+    "--format",
+    "output_format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format",
+)
+def validate(input_file: str, strict: bool, output_format: str):
+    """Validate a DomainForge DSL file."""
+    # Use plugin manager for validation
+    plugins = list(plugin_manager.plugins.values())
+    if not plugins:
+        _handle_no_plugins(output_format)
+
+    with open(input_file, "r") as f:
+        model = f.read()
+
+    critical_errors, style_errors = _validate_with_plugins(model, plugins)
+
+    # In strict mode, any error makes it invalid
+    # In non-strict mode, only critical errors make it invalid
+    is_valid = len(critical_errors) == 0 and (not strict or len(style_errors) == 0)
+
+    all_errors = critical_errors + style_errors
+    _output_validation_results(is_valid, all_errors, output_format)
+    exit(0 if is_valid else 1)
+
+
+@cli.group()
+def plugins():
+    """Plugin management commands."""
+    pass
+
+
+@plugin_command(name="list")
+@plugins.command()
+def list_plugins():
+    """List installed plugins."""
+    plugin_names = plugin_manager.list_plugins()
+
+    if not plugin_names:
+        click.echo("No plugins installed")
+        return
+
+    # Display plugin info
+    for name in plugin_names:
+        plugin = plugin_manager.get_plugin(name)
+        if plugin and plugin.metadata:
+            click.echo(
+                f"{plugin.metadata.name} v{plugin.metadata.version} - {plugin.metadata.description}"
             )
-            backend_generator.generate(domain_model)
-            logger.info(f"Python backend code generated at: {backend_dir}")
-
-        # Generate frontend code if requested
-        if not backend_only:
-            logger.info("Generating TypeScript frontend code...")
-            frontend_dir: Path = output_path / "frontend"
-            os.makedirs(frontend_dir, exist_ok=True)
-
-            frontend_generator: TypeScriptFrontendGenerator = (
-                TypeScriptFrontendGenerator(output_dir=str(frontend_dir))
-            )
-            frontend_generator.generate(domain_model)
-            logger.info(f"TypeScript frontend code generated at: {frontend_dir}")
-
-        logger.info("Code generation completed successfully")
-
-    except Exception as e:
-        logger.error(f"Error: {str(e)}")
-        if verbose:
-            import traceback
-
-            traceback.print_exc()
-        sys.exit(1)
 
 
-def get_version() -> str:
-    """Get the current version of DomainForge."""
+@plugin_command()
+@plugins.command()
+@click.argument("name")
+@click.option(
+    "--source",
+    type=click.Path(exists=True),
+    help="Source directory containing plugin files",
+)
+def install(name: str, source: str):
+    """Install a plugin."""
     try:
-        from importlib.metadata import version
+        plugin_manager.install_plugin(name, Path(source) if source else Path())
+        click.echo(f"Installed plugin '{name}'")
+    except Exception as e:
+        click.echo(f"Failed to install plugin: {e}", err=True)
+        exit(1)
 
-        return version("domainforge")
-    except Exception:
-        return "0.1.0"  # Default version if not installed
+
+@plugin_command()
+@plugins.command()
+@click.argument("name")
+def uninstall(name: str):
+    """Uninstall a plugin."""
+    try:
+        plugin_manager.uninstall_plugin(name)
+        click.echo(f"Uninstalled plugin '{name}'")
+    except Exception as e:
+        click.echo(f"Failed to uninstall plugin: {e}", err=True)
+        exit(1)
 
 
-def debug_parse_tree(node: Any) -> dict:
-    """Recursively builds a parse tree representation."""
-    children = getattr(node, "children", [])
-    return {
-        "name": type(node).__name__,
-        "children": [debug_parse_tree(child) for child in children] if children else [],
-    }
+@plugin_command()
+@plugins.command()
+def templates():
+    """List available templates from installed plugins."""
+    plugin_names = plugin_manager.list_plugins()
+
+    if not plugin_names:
+        click.echo("No template plugins installed")
+        return
+
+    for name in plugin_names:
+        plugin = plugin_manager.get_plugin(name)
+        if not plugin:
+            continue
+
+        click.echo(f"\n{plugin.metadata.name}:")
+        frameworks = plugin.get_supported_frameworks()
+        for layer, supported in frameworks.items():
+            click.echo(f"  {layer}:")
+            for framework in supported:
+                template_path = plugin.get_template_paths()[layer] / framework
+                if template_path.exists():
+                    templates = list(template_path.glob("*.j2"))
+                    template_names = [t.name for t in templates]
+                    if template_names:
+                        click.echo(f"    {framework}: {', '.join(template_names)}")
 
 
 if __name__ == "__main__":
-    main()  # type: ignore[no-untyped-call]
+    cli()

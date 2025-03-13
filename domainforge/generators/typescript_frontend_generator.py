@@ -7,12 +7,12 @@ import logging
 from pathlib import Path
 
 from ..core.models import BoundedContext, DomainModel
-from .base_generator import BaseGenerator
+from .base_generator import CodeGenerator
 
 logger = logging.getLogger(__name__)
 
 
-class TypeScriptFrontendGenerator(BaseGenerator):
+class TypeScriptFrontendGenerator(CodeGenerator):
     """Generator for TypeScript/React frontend code."""
 
     def __init__(self, output_dir: str):

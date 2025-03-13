@@ -1,0 +1,16 @@
+<template>
+  <div class="{{ entity.name | kebabcase }}-component">
+    <!-- Component template -->
+  </div>
+</template>
+
+<script>
+export default {
+  name: '{{ entity.name }}',
+  props: {
+    {% for prop in entity.properties %}
+    {{ prop.name }}: {{ prop.vue_type }},
+    {% endfor %}
+  }
+}
+</script>

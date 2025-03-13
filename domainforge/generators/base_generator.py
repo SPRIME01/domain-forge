@@ -7,14 +7,15 @@ for code generation, including template rendering and file system operations.
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template, select_autoescape
 
 from ..core.models import BoundedContext, DomainModel
+from ..plugins.discovery import find_plugins
 
 
-class BaseGenerator(ABC):
+class CodeGenerator(ABC):
     """Base class for code generators.
 
     This abstract class provides common functionality for code generation,
@@ -33,29 +34,38 @@ class BaseGenerator(ABC):
 
         """
         self.output_dir = Path(output_dir)
-
-        # If no template directory specified, use the default templates
-        if template_dir is None:
-            template_dir = Path(__file__).parent.parent / "templates"
-        else:
-            template_dir = Path(template_dir)
+        self.template_dir = Path(template_dir) if template_dir else None
+        self.plugins = find_plugins()
 
         # Build search paths for templates with correct priorities
-        search_paths = [
-            template_dir,  # Specific template directory (if provided)
+        search_paths = []
+
+        # Plugin templates take highest priority
+        for plugin in self.plugins:
+            paths = plugin.get_template_paths()
+            for path in paths.values():
+                if path.exists():
+                    search_paths.append(str(path))
+
+        # Then specific template directory if provided
+        if self.template_dir:
+            search_paths.append(str(self.template_dir))
+
+        # Then standard template locations
+        standard_paths = [
             Path(__file__).parent.parent / "templates",  # Core templates
             Path.cwd() / "templates",  # Templates in current working directory
             Path(__file__).parent.parent.parent / "templates",  # Project root templates
         ]
+        search_paths.extend(str(path) for path in standard_paths if path.exists())
 
-        # Initialize Jinja environment with multiple search paths
+        # Initialize Jinja environment with merged search paths
         self.env = Environment(
-            loader=FileSystemLoader(
-                [str(path) for path in search_paths if path.exists()]
-            ),
+            loader=FileSystemLoader(search_paths),
             trim_blocks=True,
             lstrip_blocks=True,
             keep_trailing_newline=True,
+            autoescape=select_autoescape(["html", "xml"]),
         )
 
         # Add custom filters
@@ -111,8 +121,29 @@ class BaseGenerator(ABC):
                   file. Defaults to True.
 
         """
-        # Get the template
-        template = self.env.get_template(template_name)
+        # Get the template, checking plugins first
+        template: Optional[Template] = None
+
+        try:
+            template = self.env.get_template(template_name)
+        except Exception as e:
+            # If template not found in standard locations, check plugins
+            for plugin in self.plugins:
+                try:
+                    paths = plugin.get_template_paths()
+                    for category, path in paths.items():
+                        template_path = path / template_name
+                        if template_path.exists():
+                            with open(template_path) as f:
+                                template = self.env.from_string(f.read())
+                            break
+                    if template:
+                        break
+                except Exception:
+                    continue
+
+        if not template:
+            raise ValueError(f"Template {template_name} not found")
 
         # Create parent directories if they don't exist
         if mkdir:
@@ -132,7 +163,7 @@ class BaseGenerator(ABC):
     @staticmethod
     def _to_camel_case(s: str) -> str:
         """Convert a string to camelCase."""
-        s = BaseGenerator._to_pascal_case(s)
+        s = CodeGenerator._to_pascal_case(s)
         return s[0].lower() + s[1:]
 
     @staticmethod
@@ -153,4 +184,4 @@ class BaseGenerator(ABC):
     @staticmethod
     def _to_kebab_case(s: str) -> str:
         """Convert a string to kebab-case."""
-        return BaseGenerator._to_snake_case(s).replace("_", "-")
+        return CodeGenerator._to_snake_case(s).replace("_", "-")

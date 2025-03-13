@@ -292,7 +292,7 @@ class DomainForgeTransformer(Transformer):
 
         return Property(
             name=name,
-            property_type=type_str,
+            type=type_str,  # Changed from property_type to type
             default_value=default_value,
             constraints=constraints,
         )
@@ -362,7 +362,7 @@ class DomainForgeTransformer(Transformer):
                     parameters.append(
                         Parameter(
                             name=param_name,
-                            parameter_type=param_type,
+                            type=param_type,
                             default_value=param_default,
                         )
                     )
@@ -447,7 +447,7 @@ class DomainForgeTransformer(Transformer):
 
         return Parameter(
             name=name,
-            parameter_type=type_str,
+            type=type_str,  # Changed from parameter_type to type
             default_value=default_value,
         )
 
@@ -747,7 +747,7 @@ class DomainForgeTransformer(Transformer):
                 parameters.append(
                     Parameter(
                         name=param_name,
-                        parameter_type=param_type,
+                        type=param_type,
                         default_value=param_default,
                     )
                 )
@@ -846,16 +846,38 @@ class DomainForgeTransformer(Transformer):
                 target_list, transform_func = category_map[item.data]
                 target_list.append(transform_func(item.children))
 
-        return entities, value_objects, events, services, repositories, modules, roles, relationships
+        return (
+            entities,
+            value_objects,
+            events,
+            services,
+            repositories,
+            modules,
+            roles,
+            relationships,
+        )
 
     def context_definition(self, ctx: List[Tree]) -> BoundedContext:
         """Transform a context definition into a BoundedContext."""
         name: str = str(ctx[0])
         contents: List[Tree] = []
-        if len(ctx) > 1 and hasattr(ctx[1], "data") and ctx[1].data == "context_children":
+        if (
+            len(ctx) > 1
+            and hasattr(ctx[1], "data")
+            and ctx[1].data == "context_children"
+        ):
             contents = ctx[1].children
 
-        entities, value_objects, events, services, repositories, modules, roles, relationships = self._extract_context_components(contents)
+        (
+            entities,
+            value_objects,
+            events,
+            services,
+            repositories,
+            modules,
+            roles,
+            relationships,
+        ) = self._extract_context_components(contents)
 
         for rel in relationships:
             source_entity_name: str = rel.source_entity
@@ -880,3 +902,16 @@ class DomainForgeTransformer(Transformer):
         """Ensure it always returns a string."""
         some_value: Optional[str] = None  # Example value
         return some_value or ""  # Ensure it always returns a string
+
+
+def transform_model(model_content: str) -> dict:
+    """Transform a domain model string into a structured dictionary.
+
+    Args:
+        model_content: The raw domain model content as a string
+
+    Returns:
+        dict: The transformed model as a dictionary structure
+    """
+    transformer = DomainForgeTransformer()
+    return transformer.transform(model_content)

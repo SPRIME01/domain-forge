@@ -1,0 +1,8 @@
+from django.db import models
+
+class {{ entity.name }}(models.Model):
+    """{{ entity.description }}"""
+
+    {% for prop in entity.properties %}
+    {{ prop.name }} = models.{{ prop.django_type }}()
+    {% endfor %}

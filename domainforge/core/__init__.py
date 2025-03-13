@@ -19,8 +19,8 @@ from .models import (
     BoundedContext,
     DomainModel,
 )
-from .parser import DomainForgeParser
-from .transformer import DomainForgeTransformer
+from .parser import DomainForgeParser, parse_domain_model
+from .transformer import DomainForgeTransformer, transform_model
 
 __all__ = [
     "AIClient",
@@ -42,4 +42,6 @@ __all__ = [
     "DomainModel",
     "DomainForgeParser",
     "DomainForgeTransformer",
+    "parse_domain_model",
+    "transform_model",
 ]

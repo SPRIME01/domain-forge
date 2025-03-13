@@ -1,0 +1,12 @@
+name: example-template
+version: 0.1.0
+description: Example code generation templates
+author: DomainForge Team
+type: template
+supported_frameworks:
+  backend:
+    - fastapi
+    - django
+  frontend:
+    - react
+    - vue

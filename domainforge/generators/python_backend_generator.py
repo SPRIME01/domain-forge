@@ -7,12 +7,12 @@ import logging
 from pathlib import Path
 
 from ..core.models import BoundedContext
-from .base_generator import BaseGenerator
+from .base_generator import CodeGenerator
 
 logger = logging.getLogger(__name__)
 
 
-class PythonBackendGenerator(BaseGenerator):
+class PythonBackendGenerator(CodeGenerator):
     """Generator for Python backend code using FastAPI and SQLAlchemy."""
 
     def __init__(self, output_dir: str):

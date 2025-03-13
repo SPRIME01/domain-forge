@@ -329,3 +329,181 @@ class TestEnhancedUIGrammar:
         chart_ui = right_panel.children[1].children[0]
         assert chart_ui.data == "ui_definition"
         assert chart_ui.children[0] == Token("DISPLAY_COMPONENT", "Chart")
+
+
+import pytest
+from lark import Lark
+from pathlib import Path
+import os
+
+
+@pytest.fixture
+def grammar():
+    """Load the grammar file for testing."""
+    current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+    grammar_path = current_dir / "../../domainforge/core/grammar.lark"
+
+    with open(grammar_path, "r") as f:
+        return f.read()
+
+
+@pytest.fixture
+def ui_parser(grammar):
+    """Create a parser for UI component testing."""
+    return Lark(grammar, start="ui_component")
+
+
+def test_BasicComponent_WithProperties_ParsesSuccessfully(ui_parser):
+    """Test that a basic component with properties can be parsed."""
+    # Arrange
+    input_text = """
+    Card myCard {
+        properties {
+            title: "My Card"
+            subtitle: "Card subtitle"
+        }
+    }
+    """
+
+    # Act
+    result = ui_parser.parse(input_text)
+
+    # Assert
+    assert result is not None
+    assert result.data == "ui_component"
+
+
+def test_NestedComponents_WithChildren_ParsesSuccessfully(ui_parser):
+    """Test that nested components with children can be parsed."""
+    # Arrange
+    input_text = """
+    Page mainPage {
+        properties {
+            title: "Main Page"
+        }
+        children {
+            Card card1 {
+                properties {
+                    title: "Child Card"
+                }
+            }
+            Form loginForm {
+                properties {
+                    name: "login"
+                }
+            }
+        }
+    }
+    """
+
+    # Act
+    result = ui_parser.parse(input_text)
+
+    # Assert
+    assert result is not None
+    assert result.data == "ui_component"
+
+
+def test_ComponentWithLayout_ParsesSuccessfully(ui_parser):
+    """Test that a component with layout specification can be parsed."""
+    # Arrange
+    input_text = """
+    Panel mainPanel {
+        properties {
+            title: "Main Panel"
+        }
+        layout {
+            direction: "row"
+            gap: 16
+            align: "center"
+            justify: "space-between"
+        }
+    }
+    """
+
+    # Act
+    result = ui_parser.parse(input_text)
+
+    # Assert
+    assert result is not None
+    assert result.data == "ui_component"
+
+
+def test_NavigationFlow_BasicSyntax_ParsesSuccessfully(ui_parser):
+    """Test that a component with navigation flow can be parsed."""
+    # Arrange
+    input_text = """
+    Button submitButton {
+        properties {
+            label: "Submit"
+        }
+    } navigation {
+        onClick -> HomePage
+        onHover -> ShowTooltip("message": "Click to submit")
+    }
+    """
+
+    # Act
+    result = ui_parser.parse(input_text)
+
+    # Assert
+    assert result is not None
+    assert result.data == "ui_component"
+
+
+def test_ComplexComponent_WithAllFeatures_ParsesSuccessfully(ui_parser):
+    """Test that a complex component with all features can be parsed."""
+    # Arrange
+    input_text = """
+    Page dashboardPage {
+        properties {
+            title: "Dashboard"
+            protected: true
+        }
+        layout {
+            direction: "column"
+            gap: 24
+        }
+        children {
+            Navbar topNav {
+                properties {
+                    fixed: true
+                }
+            } navigation {
+                onSelect -> NavigateTo("route": "/selected")
+            }
+
+            Panel mainContent {
+                layout {
+                    direction: "row"
+                    wrap: true
+                }
+                children {
+                    Card statsCard {
+                        properties {
+                            title: "Statistics"
+                        }
+                    }
+                    Table dataTable {
+                        properties {
+                            paginated: true
+                            rowsPerPage: 10
+                        }
+                    } navigation {
+                        onRowClick -> ShowDetail("id": "rowId")
+                    }
+                }
+            }
+        }
+    } navigation {
+        onLoad -> FetchData("endpoint": "/api/dashboard")
+        onBack -> HomePage
+    }
+    """
+
+    # Act
+    result = ui_parser.parse(input_text)
+
+    # Assert
+    assert result is not None
+    assert result.data == "ui_component"

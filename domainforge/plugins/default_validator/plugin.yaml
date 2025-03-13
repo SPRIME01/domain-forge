@@ -1,0 +1,9 @@
+name: default-validator
+version: 0.1.0
+description: Default domain model validator
+author: DomainForge Team
+type: validator
+license: MIT
+dependencies: []
+homepage: https://domain-forge.readthedocs.io/plugins/validators/default
+documentation: https://domain-forge.readthedocs.io/plugins/validators/default/usage

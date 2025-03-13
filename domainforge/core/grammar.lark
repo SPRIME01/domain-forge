@@ -33,7 +33,6 @@ visibility: VISIBILITY
 return_type: ":" type_definition
 method_body: "{" description? "}"
 
-// Define parameter_list and layout_params correctly
 parameter_list: parameter ("," parameter)*
 layout_params: layout_param_def ("," layout_param_def)*
 
@@ -63,26 +62,48 @@ api_params: "(" parameter_list? ")"
 api_return: ":" type_definition
 api_desc: "{" description? "}"
 
+// Define property value only once - this will be used throughout the grammar
+property_value: STRING | INT | FLOAT | IDENTIFIER | generic_list_value | BOOLEAN
+
 // Enhanced UI Definition with support for nesting
 ui_definition: "ui" ":" (BASIC_COMPONENT | LAYOUT_COMPONENT | NAV_COMPONENT | INPUT_COMPONENT | DISPLAY_COMPONENT) ui_params? ui_components? ui_description?
 
-// Layout and UI parameter definitions
-ui_param_def: IDENTIFIER ":" param_value
+// Enhanced UI Component syntax with navigation flows
+ui_component: (BASIC_COMPONENT | LAYOUT_COMPONENT | NAV_COMPONENT | INPUT_COMPONENT | DISPLAY_COMPONENT | IDENTIFIER) component_name "{" component_body "}" [navigation_flow]
+component_body: property_block? layout_block? children_block?
+property_block: "properties" "{" property_list "}"
+property_list: property (","? property)*
+property: IDENTIFIER ":" property_value
+
+// Layout Block
+layout_block: "layout" "{" layout_property_list "}"
+layout_property_list: layout_property (","? layout_property)*
+layout_property: IDENTIFIER ":" property_value
+
+// Children Block
+children_block: "children" "{" ui_component* "}"
+
+// Navigation Flow
+navigation_flow: "navigation" "{" nav_rule_list "}"
+nav_rule_list: nav_rule (","? nav_rule)*
+nav_rule: nav_event "->" nav_action
+nav_event: "onClick" | "onSubmit" | "onSelect" | "onLoad" | "onBack" | "onHover" | "onRowClick" | IDENTIFIER
+nav_action: nav_target ["(" nav_param_list? ")"]
+nav_target: IDENTIFIER
+nav_param_list: nav_param (","? nav_param)*
+nav_param: STRING ":" property_value
+
+ui_param_def: IDENTIFIER ":" property_value
 layout_param_def: layout_declaration | "layout" ":" layout_object
 layout_declaration: IDENTIFIER ":" layout_object
 
-// UI Parameter types and values
 ui_parameter: ui_param_def
 layout_parameter: layout_param_def
-param_value: STRING | INT | FLOAT | IDENTIFIER | generic_list_value
 
-// Layout object handling
 layout_object: "{" layout_property_list "}"
-layout_property_list: object_property (","? object_property)*
+object_property_list: object_property (","? object_property)*
 object_property: IDENTIFIER ":" property_value
-property_value: STRING | INT | FLOAT | IDENTIFIER | generic_list_value
 
-// Parameter lists
 ui_params: "(" mixed_parameter_list? ")"
 mixed_parameter_list: (ui_parameter | layout_param_def) ("," (ui_parameter | layout_param_def))*
 
@@ -92,21 +113,28 @@ ui_parameter_list: ui_parameter ("," ui_parameter)*
 ui_components: "components" ":" "{" ui_definition* "}"
 ui_description: "description" ":" "{" description? "}"
 
-// Component Type Groups
-BASIC_COMPONENT: "Form" | "Table" | "Card" | "Detail" | "List"
+
+// Component type and name rules
+component_type: BASIC_COMPONENT | LAYOUT_COMPONENT | NAV_COMPONENT | INPUT_COMPONENT | DISPLAY_COMPONENT | IDENTIFIER
+component_name: IDENTIFIER
+layout_key: IDENTIFIER
+
+BASIC_COMPONENT: "Form" | "Table" | "Card" | "Detail" | "List" | "Button" | "Text" | "Page"
 LAYOUT_COMPONENT: "Container" | "Grid" | "Flex" | "Panel" | "Tabs" | "Accordion"
 NAV_COMPONENT: "Menu" | "Navbar" | "Sidebar" | "Breadcrumbs" | "Pagination"
 INPUT_COMPONENT: "Input" | "Select" | "Checkbox" | "Radio" | "DatePicker" | "TimePicker" | "FileUpload"
 DISPLAY_COMPONENT: "Modal" | "Dialog" | "Tooltip" | "Chart" | "Badge" | "Avatar" | "Progress"
+BOOLEAN: "true" | "false"
 
-// Terminals
+STRING: /"[^"]*"/
 IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
 RELATIONSHIP_SYMBOL: "=>" | "<->" | "--" | "->" | "." | "::" | "/" | "="
 HTTP_METHOD: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
 VISIBILITY: "public" | "private" | "protected"
-STRING: /"[^"]*"/
+
 %import common.INT
 %import common.FLOAT
+%import common.NUMBER
 %import common.WS
 
 COMMENT: /\/\/[^\n]*/ | /\/\*[\s\S]*?\*\//

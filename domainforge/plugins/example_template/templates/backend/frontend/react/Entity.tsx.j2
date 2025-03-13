@@ -1,0 +1,19 @@
+import React from 'react';
+
+interface {{ entity.name }}Props {
+    {% for prop in entity.properties %}
+    {{ prop.name }}{% if not prop.required %}?{% endif %}: {{ prop.type_hints.typescript }};
+    {% endfor %}
+}
+
+export const {{ entity.name }}: React.FC<{{ entity.name }}Props> = (props) => {
+    return (
+        <div className="{{ entity.name | lower }}">
+            {% for prop in entity.properties %}
+            <div className="{{ entity.name | lower }}__{{ prop.name }}">
+                {props.{{ prop.name }}}
+            </div>
+            {% endfor %}
+        </div>
+    );
+};

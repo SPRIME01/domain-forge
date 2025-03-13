@@ -1,0 +1,101 @@
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+
+interface {{ entity.name }}Props {
+    {% for prop in entity.properties %}
+    {{ prop.name }}{% if not prop.required %}?{% endif %}: {{ prop.type_hints.typescript }};
+    {% endfor %}
+}
+
+export const {{ entity.name }}: React.FC<{{ entity.name }}Props> = (props) => {
+    return (
+        <div className="{{ entity.name | lower }}">
+            {% for prop in entity.properties %}
+            <div className="{{ entity.name | lower }}__{{ prop.name }}">
+                {props.{{ prop.name }}}
+            </div>
+            {% endfor %}
+        </div>
+    );
+};
+
+export const {{ entity.name }}List: React.FC = () => {
+    const [{{ entity.name.lower() }}s, set{{ entity.name }}s] = useState<{{ entity.name }}Props[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetch{{ entity.name }}s = async () => {
+            try {
+                const response = await axios.get('/api/{{ entity.name.lower() }}');
+                set{{ entity.name }}s(response.data);
+                setLoading(false);
+            } catch (err) {
+                setError('Failed to load {{ entity.name.lower() }}s');
+                setLoading(false);
+            }
+        };
+
+        fetch{{ entity.name }}s();
+    }, []);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    return (
+        <div>
+            <h1>{{ entity.name }} List</h1>
+            <div className="grid gap-4">
+                {{{ entity.name.lower() }}s.map(({{ entity.name.lower() }}) => (
+                    <div key={ {{- entity.name.lower() }}.id } className="p-4 border rounded">
+                        {% for prop in entity.properties %}
+                        <div>
+                            <strong>{{ prop.name }}:</strong> { {{- entity.name.lower() }}.{{ prop.name }} }
+                        </div>
+                        {% endfor %}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export const {{ entity.name }}Detail: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
+    const [{{ entity.name.lower() }}, set{{ entity.name }}] = useState<{{ entity.name }}Props | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetch{{ entity.name }} = async () => {
+            try {
+                const response = await axios.get(`/api/{{ entity.name.lower() }}/${id}`);
+                set{{ entity.name }}(response.data);
+                setLoading(false);
+            } catch (err) {
+                setError('Failed to load {{ entity.name.lower() }}');
+                setLoading(false);
+            }
+        };
+
+        fetch{{ entity.name }}();
+    }, [id]);
+
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error}</div>;
+    if (!{{ entity.name.lower() }}) return <div>{{ entity.name }} not found</div>;
+
+    return (
+        <div>
+            <h1>{{ entity.name }} Details</h1>
+            <div className="space-y-4">
+                {% for prop in entity.properties %}
+                <div>
+                    <strong>{{ prop.name }}:</strong> { {{- entity.name.lower() }}.{{ prop.name }} }
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    );
+};

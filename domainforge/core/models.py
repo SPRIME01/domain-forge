@@ -13,7 +13,7 @@ class Parameter(BaseModel):
     """Represents a parameter in a method signature or API endpoint."""
 
     name: str
-    parameter_type: str
+    type: str  # Changed from parameter_type to type
     default_value: Optional[Any] = None
 
 
@@ -21,7 +21,7 @@ class Property(BaseModel):
     """Represents a property/attribute of an entity, value object, etc."""
 
     name: str
-    property_type: str
+    type: str  # Changed from property_type to type
     default_value: Optional[Any] = None
     constraints: List[str] = Field(default_factory=list)
 

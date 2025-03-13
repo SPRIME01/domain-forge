@@ -1,0 +1,15 @@
+import React from 'react';
+
+interface {{ entity.name }}Props {
+    {% for prop in entity.properties %}
+    {{ prop.name }}: {{ prop.ts_type }};
+    {% endfor %}
+}
+
+export const {{ entity.name }}: React.FC<{{ entity.name }}Props> = (props) => {
+    return (
+        <div>
+            {/* Component implementation */}
+        </div>
+    );
+};

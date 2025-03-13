@@ -1,0 +1,46 @@
+"""{{ entity.name }} entity model and API endpoints."""
+
+from typing import List, Optional
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
+router = APIRouter(prefix="/{{ entity.name.lower() }}", tags=["{{ entity.name }}"])
+
+# Entity model
+class {{ entity.name }}(BaseModel):
+    """{{ entity.name }} model."""
+    {% for prop in entity.properties %}
+    {{ prop.name }}: {% if prop.required %}{{ prop.type }}{% else %}Optional[{{ prop.type }}]{% endif %}
+    {% endfor %}
+
+# CRUD operations
+@router.get("/", response_model=List[{{ entity.name }}])
+async def list_{{ entity.name.lower() }}s():
+    """List all {{ entity.name.lower() }}s."""
+    # TODO: Implement repository
+    return []
+
+@router.get("/{id}", response_model={{ entity.name }})
+async def get_{{ entity.name.lower() }}(id: UUID):
+    """Get a specific {{ entity.name.lower() }}."""
+    # TODO: Implement repository
+    raise HTTPException(status_code=404, detail="{{ entity.name }} not found")
+
+@router.post("/", response_model={{ entity.name }})
+async def create_{{ entity.name.lower() }}({{ entity.name.lower() }}: {{ entity.name }}):
+    """Create a new {{ entity.name.lower() }}."""
+    # TODO: Implement repository
+    return {{ entity.name.lower() }}
+
+@router.put("/{id}", response_model={{ entity.name }})
+async def update_{{ entity.name.lower() }}(id: UUID, {{ entity.name.lower() }}: {{ entity.name }}):
+    """Update a {{ entity.name.lower() }}."""
+    # TODO: Implement repository
+    raise HTTPException(status_code=404, detail="{{ entity.name }} not found")
+
+@router.delete("/{id}")
+async def delete_{{ entity.name.lower() }}(id: UUID):
+    """Delete a {{ entity.name.lower() }}."""
+    # TODO: Implement repository
+    raise HTTPException(status_code=404, detail="{{ entity.name }} not found")

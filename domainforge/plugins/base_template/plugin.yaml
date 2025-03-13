@@ -1,0 +1,7 @@
+name: base-template
+version: 0.1.0
+description: Default code generation templates
+author: DomainForge Team
+type: template
+license: MIT
+dependencies: []

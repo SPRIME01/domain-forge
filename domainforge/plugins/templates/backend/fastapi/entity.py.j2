@@ -1,0 +1,10 @@
+from fastapi import APIRouter
+
+class {{ entity.name }}:
+    """{{ entity.description }}"""
+
+    {% for prop in entity.properties %}
+    {{ prop.name }}: {{ prop.type }}
+    {% endfor %}
+
+router = APIRouter()

@@ -20,6 +20,8 @@ DomainForge is a powerful domain-driven code generation tool that transforms dom
 - **🧪 Testing**: Generated test suite with unit and integration tests
 - **🗄️ Database Support**: SQL database support through SQLAlchemy
 - **⚡ Async Support**: Fully async backend implementation for high performance
+- **🔌 Plugin System**: Extensible architecture supporting custom generators and templates
+- **🎨 Advanced UI Components**: Rich set of customizable UI components with theming support
 
 ## 📦 Installation
 
@@ -33,7 +35,7 @@ uv pip install domainforge
 
 ## 🚀 Quick Start
 
-### 🤖 Using the AI Assistant (New!)
+### 🤖 Using the AI Assistant
 
 1. Configure your OpenAI API key:
 
@@ -206,37 +208,134 @@ The DomainForge DSL allows you to define your domain model in a clear, structure
 
 ## 🖼️ UI Components
 
-DomainForge supports the following UI components that can be defined within entities using the DSL:
+DomainForge provides a comprehensive set of UI components that can be defined using the DSL:
 
-1. **Form**: Typically used for data input/editing. Can have parameters defined through `ui_params` and can include a description in `ui_desc`.
-2. **Table**: Used for displaying tabular data. Suitable for showing collections of entities.
-3. **Card**: Represents entity data in a card format. Good for grid/dashboard layouts.
-4. **Detail**: Shows detailed view of an entity. Useful for showing all properties of a single record.
-5. **List**: Displays data in a list format. Suitable for simpler data presentations.
+1. **Form**:
+   - Input/editing forms with validation
+   - Custom field layouts
+   - Conditional rendering
+   - Multi-step wizard support
+   - File upload capabilities
 
-### Usage Example
+2. **Table**:
+   - Sortable columns
+   - Filtering
+   - Pagination
+   - Bulk actions
+   - Custom cell renderers
+   - Export functionality
 
-Here's how you might define a UI component in the DSL:
+3. **Card**:
+   - Customizable layouts
+   - Media support
+   - Action buttons
+   - Hover effects
+   - Loading states
+
+4. **Detail**:
+   - Sectioned layouts
+   - Related entity views
+   - Inline editing
+   - History tracking
+   - Document preview
+
+5. **List**:
+   - Virtual scrolling
+   - Grid/List view toggle
+   - Drag-and-drop reordering
+   - Selection management
+   - Search functionality
+
+6. **Dashboard**:
+   - Configurable widgets
+   - Drag-and-drop layout
+   - Real-time updates
+   - Data visualization
+
+7. **Calendar**:
+   - Event management
+   - Multiple views (month, week, day)
+   - Recurring events
+   - Resource scheduling
+
+### UI Component Configuration
+
+Components can be configured using parameters and descriptions:
 
 ```plaintext
-#User {
-    name: String
-    email: String
+#Entity {
+    // Properties...
 
     ui: Form (
-        fields: List<String> = ["name", "email"]
-    ) { "User registration form" }
+        layout: "two-column",
+        validation: "client-side",
+        steps: ["basic", "advanced"],
+        theme: "light"
+    ) { "Custom form description" }
 
     ui: Table (
-        columns: List<String> = ["name", "email"]
-    ) { "User management table" }
+        pageSize: 20,
+        sortable: true,
+        filterable: true,
+        exportFormats: ["csv", "xlsx"]
+    ) { "Data management table" }
 }
 ```
 
-The grammar allows for:
-- Optional parameters through `ui_params`
-- Optional descriptions through `ui_desc`
-- Multiple UI definitions per entity
+## 🔌 Plugin System
+
+DomainForge features a powerful plugin system that allows extending its functionality:
+
+### Plugin Types
+
+1. **Generator Plugins**
+   - Custom code generators
+   - Template processors
+   - Output formatters
+
+2. **UI Component Plugins**
+   - Custom component definitions
+   - Theme providers
+   - Layout systems
+
+3. **Validation Plugins**
+   - Custom validation rules
+   - Validation strategies
+   - Error formatters
+
+4. **Integration Plugins**
+   - Database connectors
+   - API integrations
+   - Authentication providers
+
+### Creating Plugins
+
+```python
+from domainforge.plugins import GeneratorPlugin
+
+class CustomGenerator(GeneratorPlugin):
+    def generate(self, model):
+        # Custom generation logic
+        pass
+```
+
+### Installing Plugins
+
+```bash
+domainforge plugin install my-custom-plugin
+```
+
+### Using Plugins in DSL
+
+```plaintext
+@use "custom-generator"
+
+#Entity {
+    // Use custom plugin features
+    @custom-generator.options(...)
+    property: Type
+}
+```
 
 ## 🏛️ Architecture
 
